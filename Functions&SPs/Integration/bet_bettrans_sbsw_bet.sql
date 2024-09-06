@@ -60,8 +60,9 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_bet(
 	IN extra jsonb,
 	IN parlaytype character varying,
 	IN detail jsonb,
-	IN tickettype integer,
 	IN refid character varying,
+	IN game_provider_id uuid,
+	IN game_id integer,
 	INOUT licenseetxid bigint DEFAULT NULL::bigint,
 	INOUT spresult integer DEFAULT 0)
 LANGUAGE 'plpgsql'
@@ -142,7 +143,8 @@ AS $BODY$
             extra,
             parlayType,
             detail,
-            TicketType
+            game_provider_id,
+			game_id
         )
         VALUES
         (
@@ -205,7 +207,8 @@ AS $BODY$
             extra,
             parlayType,
             detail,
-            TicketType
+            game_provider_id,
+			game_id
         );
         SELECT LASTVAL() INTO licenseeTxId;
 END ; 

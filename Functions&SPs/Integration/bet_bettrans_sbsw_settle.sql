@@ -15,7 +15,8 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_settle(
 	IN creditamount numeric DEFAULT NULL::numeric,
 	IN debitamount numeric DEFAULT NULL::numeric,
 	IN extrastatus character varying DEFAULT NULL::character varying,
-	IN tickettype integer DEFAULT NULL::integer,
+	IN game_provider_id uuid DEFAULT NULL,
+	IN game_id integer DEFAULT NULL,
 	INOUT spresult integer DEFAULT 0,
 	INOUT sporttype integer DEFAULT NULL::integer)
 LANGUAGE 'plpgsql'
@@ -50,7 +51,8 @@ AS $BODY$
             creditAmount,
             debitAmount,
             extraStatus,
-            TicketType
+            game_provider_id,
+			game_id
         )
         VALUES
         (
@@ -66,7 +68,8 @@ AS $BODY$
             creditAmount,
             debitAmount,
             extraStatus,
-            TicketType
+            game_provider_id,
+			game_id
         );
 	GET DIAGNOSTICS _rc = ROW_COUNT;
     IF _rc > 0 THEN
