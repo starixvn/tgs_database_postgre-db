@@ -4,34 +4,36 @@
 */
 
 
----drop table if exists dbo.bettrans_SPSW_Bet;
+---drop table if exists dbo.bettrans_SabaPlus_Bet;
 
-CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SPSW_Bet_sq_seq
+CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SabaPlus_Bet_sq_seq
     INCREMENT 1
     START 1
     MINVALUE 1
     MAXVALUE 9223372036854775807
     CACHE 1;
 
-ALTER SEQUENCE dbo.bettrans_SPSW_Bet_sq_seq
+ALTER SEQUENCE dbo.bettrans_SabaPlus_Bet_sq_seq
     OWNER TO postgres;
 	
-CREATE TABLE IF NOT EXISTS dbo.bettrans_SPSW_Bet 
+CREATE TABLE dbo.bettrans_SabaPlus_Bet 
 (
-	 SQ				bigint NOT NULL DEFAULT  nextval('dbo.bettrans_SPSW_Bet_sq_seq'::regclass) 
+	 SQ				bigint NOT NULL DEFAULT  nextval('dbo.bettrans_SabaPlus_Bet_sq_seq'::regclass) 
 	,Seq			character varying(32) 
 	,OperatorCustId	character varying(32)	NOT NULL
 	,GameType		character varying(50)	NOT NULL
-	,Bettype		integer					NOT NULL
-	,GameRoundId	character varying(100)	NOT NULL
+	,Bettype		integer					
+	,GameRoundId	character varying(100)
 	,GameId			character varying(50)	NOT NULL	
 	,IpAddress		character varying(25)	
-	,TransDate		timestamp with time zone	NOT NULL				
+	,TransDate		timestamp with time zone	NOT NULL	
+	,SettleDate		timestamp with time zone
 	,TicketNo		character varying(200)		NOT NULL
 	,TransactionId	character varying(100)	
 	,Stake			numeric(20,6)	NOT NULL DEFAULT 0.0
 	,ActualStake	numeric(20,6)	NOT NULL DEFAULT 0.0
-	,NetStake		numeric(20,6)	NOT NULL DEFAULT 0.0		
+	,NetStake		numeric(20,6)	DEFAULT 0.0	
+	,Payout			numeric(20,6)	DEFAULT 0.0
 	,Odds			numeric(20,2)	NOT NULL 
 	,BetChoice		character varying(100)
 	,TableCode		character varying(100)	
@@ -42,39 +44,38 @@ CREATE TABLE IF NOT EXISTS dbo.bettrans_SPSW_Bet
 	,CreateTime		timestamp with time zone NOT NULL
 	,UpdateTime		timestamp with time zone NOT NULL
 	,ExtraInfo		character varying(500)		
-	,ActionID		smallint NOT NULL DEFAULT 0
+	,Action			character varying(100) NOT NULL
 );
 
-ALTER TABLE IF EXISTS dbo.bettrans_sbsw_bet
+ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_bet
     OWNER to postgres;
 
 
-ALTER SEQUENCE dbo.bettrans_SPSW_Bet_sq_seq
-    OWNED BY dbo.bettrans_SPSW_Bet.sq;
+ALTER SEQUENCE dbo.bettrans_SabaPlus_Bet_sq_seq
+    OWNED BY dbo.bettrans_SabaPlus_Bet.sq;
 
 -------------------------------------------------------------------------
 
 	
----drop table if exists dbo.bettrans_SPSW_Settle;
+---drop table if exists dbo.bettrans_SabaPlus_Settle;
 
-CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SPSW_Settle_sq_seq
+CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SabaPlus_Settle_sq_seq
     INCREMENT 1
     START 1
     MINVALUE 1
     MAXVALUE 9223372036854775807
     CACHE 1;
 
-ALTER SEQUENCE dbo.bettrans_SPSW_Settle_sq_seq
+ALTER SEQUENCE dbo.bettrans_SabaPlus_Settle_sq_seq
     OWNER TO postgres;
 
 
-CREATE TABLE IF NOT EXISTS dbo.bettrans_SPSW_Settle 
+CREATE TABLE dbo.bettrans_SabaPlus_Settle 
 (
-	 SQ				bigint					NOT NULL DEFAULT nextval('dbo.bettrans_SPSW_Settle_sq_seq'::regclass) 
-	,Seq			character varying(64)	NOT NULL
-	,Refno			bigint					NOT NULL	
+	 SQ				bigint					NOT NULL DEFAULT nextval('dbo.bettrans_SabaPlus_Settle_sq_seq'::regclass) 
+	,Seq			character varying(64)	NOT NULL	
 	,OperatorCustId	character varying(32)	NOT NULL			
-	,Bettype		integer					NOT NULL
+	,Bettype		integer					 
 	,GameRoundId	character varying(100)
 	,GameId			character varying(50)	NOT NULL	
 	,TicketStatus	smallint							
@@ -93,12 +94,13 @@ CREATE TABLE IF NOT EXISTS dbo.bettrans_SPSW_Settle
 	,PrizeName		character varying(500)	
 	,CreateTime		timestamp with time zone	NOT NULL
 	,UpdateTime		timestamp with time zone	NOT NULL
+	,Action			character varying(100) 		NOT NULL
 );
 
-ALTER TABLE IF EXISTS dbo.bettrans_SPSW_Settle
+ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle
     OWNER to postgres;
 
-ALTER SEQUENCE dbo.bettrans_SPSW_Settle_sq_seq
-    OWNED BY dbo.bettrans_SPSW_Settle.sq;
+ALTER SEQUENCE dbo.bettrans_SabaPlus_Settle_sq_seq
+    OWNED BY dbo.bettrans_SabaPlus_Settle.sq;
 
 
