@@ -5,15 +5,14 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_cancelbet(
 	IN refid character varying,
 	IN creditamount numeric,
 	IN debitamount numeric,
-	INOUT spresult integer DEFAULT 0,
-	INOUT sporttype integer DEFAULT NULL::integer)
+	INOUT statuscode character varying DEFAULT '0',
+	INOUT errmsg text default '')
 LANGUAGE 'plpgsql'
 AS $BODY$
-	DECLARE _TicketType INT:= null;
-	_sq bigint:= null;
+	DECLARE _sq bigint:= null;
 BEGIN    
-        SELECT SBSW.sportType, SBSW.TicketType, SBSW.SQ
-        INTO bet_bettrans_sbsw_cancelbet.SportType, _TicketType, _sq
+        SELECT SBSW.SQ
+        INTO _sq
         FROM dbo.Bettrans_SBSW_Bet AS SBSW WHERE SBSW.refId = bet_bettrans_sbsw_cancelbet.refId
         ORDER BY SQ DESC 
         LIMIT 1;
@@ -39,10 +38,7 @@ BEGIN
            operationId = bet_bettrans_sbsw_cancelbet.operationId,
             updateTime = bet_bettrans_sbsw_cancelbet.updateTime,
             debitAmount = bet_bettrans_sbsw_cancelbet.debitAmount,
-            creditAmount = bet_bettrans_sbsw_cancelbet.creditAmount,
-            TicketType = _TicketType
+            creditAmount = bet_bettrans_sbsw_cancelbet.creditAmount
         WHERE SQ = _sq;
-          
-        GET DIAGNOSTICS SPResult = ROW_COUNT;
 END ;
 $BODY$;

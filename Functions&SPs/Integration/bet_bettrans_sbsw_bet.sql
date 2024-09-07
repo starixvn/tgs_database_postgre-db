@@ -64,7 +64,8 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_bet(
 	IN game_provider_id uuid,
 	IN game_id integer,
 	INOUT licenseetxid bigint DEFAULT NULL::bigint,
-	INOUT spresult integer DEFAULT 0)
+	INOUT StatusCode character varying DEFAULT '0',
+	INOUT ErrMsg TEXT DEFAULT '')
 LANGUAGE 'plpgsql'
 AS $BODY$
         DECLARE _sq bigint ;
@@ -77,7 +78,8 @@ AS $BODY$
             WHERE  SBSW.refId = bet_bettrans_sbsw_bet.refId AND SBSW.operationId = bet_bettrans_sbsw_bet.operationId;
         
             IF _sq IS NOT NULL THEN 
-                SELECT -4 INTO SPResult;
+                StatusCode := '101';
+				ErrMsg := 'Duplicate Transaction';
                 RETURN;
             END IF;
         END IF;

@@ -1,0 +1,1 @@
+ALTER TABLE bet.rounds DROP actual_bet_amount;

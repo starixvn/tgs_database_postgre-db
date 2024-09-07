@@ -7,17 +7,16 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_get_ticketinfo(
 	IN refid character varying DEFAULT NULL::character varying,
 	INOUT ticketstatus character varying DEFAULT NULL::character varying,
 	INOUT actualstake numeric DEFAULT NULL::numeric,
-	INOUT winlostamount numeric DEFAULT NULL::numeric)
+	INOUT winlostamount numeric DEFAULT NULL::numeric,
+	INOUT StatusCode character varying DEFAULT '0',
+	INOUT ErrMsg TEXT DEFAULT ''
+	)
 LANGUAGE 'plpgsql'
 AS $BODY$
 begin
 	select betAmount
 		,actualAmount
-		,case action when 'PlaceBet' then 'waiting'
-					when 'ConfirmBet' then 'running'
-					when 'CancelBet' then 'cancelled' 
-					else '' end as ticketstatus
-	into actualstake, winlostamount, ticketstatus
+	into actualstake, winlostamount
 	from dbo.bettrans_sbsw_bet as sbsw
 	where sbsw.userid = Bet_Bettrans_SBSW_Get_TicketInfo.userid and sbsw.refid =  Bet_Bettrans_SBSW_Get_TicketInfo.refid;
 
@@ -34,5 +33,3 @@ begin
 	end if;
 end;
 $BODY$;
-ALTER PROCEDURE dbo.bet_bettrans_sbsw_get_ticketinfo(character varying, character varying, character varying, numeric, numeric)
-    OWNER TO postgres;

@@ -17,8 +17,9 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_settle(
 	IN extrastatus character varying DEFAULT NULL::character varying,
 	IN game_provider_id uuid DEFAULT NULL,
 	IN game_id integer DEFAULT NULL,
-	INOUT spresult integer DEFAULT 0,
-	INOUT sporttype integer DEFAULT NULL::integer)
+	INOUT sporttype INTEGER DEFAULT NULL,
+	INOUT StatusCode character varying DEFAULT '0',
+	INOUT ErrMsg text DEFAULT '')
 LANGUAGE 'plpgsql'
 AS $BODY$
 	DECLARE _sq BIGINT;
@@ -32,7 +33,8 @@ AS $BODY$
             WHERE  SBSW.refId = bet_bettrans_sbsw_settle.refId AND SBSW.operationId = bet_bettrans_sbsw_settle.operationId;
         
             IF _sq IS NOT NULL THEN --已完成此交易
-                SELECT -4 INTO SPResult;
+                StatusCode := '101';
+				ErrMsg := 'Duplicate Transaction'
                 RETURN;
             END IF;
         END IF;
@@ -73,11 +75,12 @@ AS $BODY$
         );
 	GET DIAGNOSTICS _rc = ROW_COUNT;
     IF _rc > 0 THEN
+		/*
         PERFORM 1
         FROM dbo.Bettrans_SBSW_Bet AS SBSW  
 		WHERE SBSW.refId = bet_bettrans_sbsw_settle.refId;
 		get diagnostics SPResult = row_count;
-
+		*/
 		select sbsw.sporttype 
 		into bet_bettrans_sbsw_settle.sporttype
 		from dbo.Bettrans_SBSW_Bet AS SBSW  

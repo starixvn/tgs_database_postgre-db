@@ -4,7 +4,9 @@
 
 CREATE OR REPLACE PROCEDURE bet.bet_round_details_set(
 	IN p_id uuid,
-	IN p_data text)
+	IN p_data text,
+	INOUT statuscode character varying DEFAULT '0',
+	INOUT errmsg text default '')
 LANGUAGE 'plpgsql'
 AS $BODY$
 BEGIN

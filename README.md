@@ -1,98 +1,51 @@
 # postgre-db
-----bet_bettrans_sbsw_settle_xtest
-----remove param: tickettype
-----add param: game_provider_id [uuid], game_id [integer]
+## dbo.bet_bettrans_sbsw_settle_xtest
+## remove param: tickettype, SPResult
+## add param: game_provider_id [uuid], game_id [integer], StatusCode [character varying], ErrMsg [TEXT]
+## Settle/Unsettle/Resettle call with all param
 
--- CALL dbo.bet_bettrans_sbsw_settle_xtest(
-	-- action	=> 	'action10'::character varying,
-	-- operationid	=> 	'opid10'::character varying,
-	-- userid	=> 	'userid1'::character varying,
-	-- refid	=> 	'refid10'::character varying,
-	-- txid	=> 	1112::bigint,
-	-- updatetime	=>	'2024-08-27 05:51:56.573351+00'::timestamp with time zone, 
-	-- winlostdate	=>	'2024-08-27'::date,
-	-- status	=> 	'status1'::character varying,
-	-- payout	=> 	11.1::numeric,
-	-- creditamount	=> 	11.1::numeric,
-	-- debitamount	=> 	1.1::numeric,
-	-- extrastatus	=> 	'extrastatus1'::character varying,
-	-- game_provider_id	=> 	'305f1178-b12a-48e5-bef6-3a67c2b0be00' :: uuid,
-	-- game_id	=> 	1::integer,
-	-- spresult	=> 	0::integer,
-	-- sporttype	=> 	null::integer
--- )
+###########################
 
-------------------------------------------------------------
-------------------------------------------------------------
+## dbo.bet_bettrans_sbsw_bet_xtest
+## remove param: tickettype, SPResult
+## add param: game_provider_id [uuid], game_id [integer], StatusCode [character varying], ErrMsg [TEXT]
+## PlaceBet/PlaceBetParlay call with all param
 
-----bet_bettrans_sbsw_bet_xtest
-----remove param: tickettype
-----add param: game_provider_id [uuid], game_id [integer]
+###########################
 
--- CALL dbo.bet_bettrans_sbsw_bet_xtest(
--- action	=>	'action12'	::	character varying	,
--- operationid	=>	'opid12'	::	character varying	,
--- userid	=>	'userid12'	::	character varying	,
--- currency	=>	1	::	integer	,
--- matchid	=>	11	::	integer	,
--- homeid	=>	111	::	integer	,
--- awayid	=>	112	::	integer	,
--- homename	=>	'home1'	::	character varying	,
--- awayname	=>	'away1'	::	character varying	,
--- kickofftime	=>'2024-08-27 05:51:56.573351+00'	::	timestamp with time zone	,
--- bettime	=>'2024-08-27 05:51:56.573351+00'	::	timestamp with time zone	,
--- betamount	=>	1.1	::	numeric	,
--- actualamount	=>	1.2	::	numeric	,
--- sporttype	=>	11	::	integer	,
--- sporttypename	=>	'sport1'	::	character varying	,
--- bettype	=>	111	::	integer	,
--- bettypename	=>	'bettype1'	::	character varying	,
--- oddstype	=>	1	::	integer	,
--- oddsid	=>	11	::	bigint	,
--- odds	=>	11.1	::	numeric	,
--- betchoice	=>	'choice1'	::	character varying	,
--- betchoice_en	=>	'choiceen1'	::	character varying	,
--- updatetime	=>'2024-08-27 05:51:56.573351+00'	::	timestamp with time zone	,
--- transactiontime	=>'2024-08-27 05:51:56.573351+00'	::	timestamp with time zone	,
--- leagueid	=>	1	::	integer	,
--- leaguename	=>	'league1'	::	character varying	,
--- leaguename_en	=>	'leagueen1'	::	character varying	,
--- sporttypename_en	=>	'sport1'	::	character varying	,
--- bettypename_en	=>	'bet1'	::	character varying	,
--- homename_en	=>	'homename1'	::	character varying	,
--- awayname_en	=>	'awayname1'	::	character varying	,
--- ip	=>'127.0.0.1'	::	character varying	,
--- islive	=>'1'	::	boolean	,
--- txid	=>	111	::	bigint	,
--- tsid	=>	'tsid1'	::	character varying	,
--- point	=>	'point1'	::	character varying	,
--- point2	=>	'point2'	::	character varying	,
--- betteam	=>	'betteam1'	::	character varying	,
--- homescore	=>	1	::	integer	,
--- awayscore	=>	1	::	integer	,
--- bastatus	=>'1'	::	boolean	,
--- excluding	=>	'eld1'	::	character varying	,
--- betfrom	=>	'betform1'	::	character varying	,
--- creditamount	=>	11	::	numeric	,
--- debitamount	=>	1	::	numeric	,
--- oddsinfo	=>	'odd1'	::	character varying	,
--- matchdatetime	=>'2024-08-27 05:51:56.573351+00'	::	timestamp with time zone	,
--- isoddschanged	=>	'1'	::	boolean	,
--- winlostdate	=>'2024-08-27'	::	date	,
--- productid	=>	11	::	integer	,
--- gameid	=>	1	::	integer	,
--- productname_en	=>	'productname1'	::	character varying	,
--- gamename_en	=>	'gamename1'	::	character varying	,
--- roundid	=>	'roundid1'	::	character varying	,
--- extra	=>'{}'	::	jsonb	,
--- parlaytype	=>'parlaytype1'	::	character varying	,
--- detail	=>'{}'	::	jsonb	,
--- game_provider_id	=>'305f1178-b12a-48e5-bef6-3a67c2b0be00'	::	uuid	,
--- game_id	=>	1	::	integer	,
--- refid	=>	'refid1'	::	character varying	,
--- licenseetxid	=>	11	::	bigint	,
--- spresult	=>	0	::	integer	
--- )
+## bet.bet_rounds_set_xtest
+## remove param: actual_bet_amount
+## add param: win_loss [numeric], licenseetxid [bigint], StatusCode [character varying]
+## change param: bet_type [numeric -> integer]
+## ConfirmBet/ ConfirmBetParlay call with these param:
+id 
+external_round_id 
+game_provider_id 
+player_code
+game_id
+currency_code 
+game_provider_configuration_id
+wallet_id 
+brand_id 
+external_created_on
+licenseetxid
+actiontype 
 
+## dbo.bet_bettrans_sbsw_get_ticketinfo_xtest
+## add param: StatusCode [character varying], Errmsg [text]
+## GetTicketInfo call with all params
 
+## dbo.bet_bettrans_sbsw_confirmbet_xtest
+## remove param: sporttype, SPResult
+## add param: StatusCode [character varying], ErrMsg [TEXT]
+## change param: add default value null for all param
+## ConfirmBet/ ConfirmBetParlay call with all param
 
+## bet.bet_round_details_set_xtest
+## add param: StatusCode [character varying], Errmsg [text]
+## ConfirmBet/ ConfirmBetParlay call with all param
+
+## dbo.bet_bettrans_sbsw_cancelbet_xtest
+## remove param: spresult, sporttype
+## add param: StatusCode [character varying], ErrMsg [TEXT] 
+## CancelBet call with all param
