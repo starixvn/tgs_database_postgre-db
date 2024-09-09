@@ -60,9 +60,7 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_bet(
 	IN extra jsonb,
 	IN parlaytype character varying,
 	IN detail jsonb,
-	IN refid character varying,
-	IN game_provider_id uuid,
-	IN game_id integer,
+	IN refid character varying
 	INOUT licenseetxid bigint DEFAULT NULL::bigint,
 	INOUT StatusCode character varying DEFAULT '0',
 	INOUT ErrMsg TEXT DEFAULT '')
@@ -144,9 +142,7 @@ AS $BODY$
             roundId,
             extra,
             parlayType,
-            detail,
-            game_provider_id,
-			game_id
+            detail
         )
         VALUES
         (
@@ -208,12 +204,8 @@ AS $BODY$
             roundId,
             extra,
             parlayType,
-            detail,
-            game_provider_id,
-			game_id
+            detail
         );
         SELECT LASTVAL() INTO licenseeTxId;
 END ; 
 $BODY$;
-ALTER PROCEDURE dbo.bet_bettrans_sbsw_bet(character varying, character varying, character varying, integer, integer, integer, integer, character varying, character varying, timestamp with time zone, timestamp with time zone, numeric, numeric, integer, character varying, integer, character varying, integer, bigint, numeric, character varying, character varying, timestamp with time zone, timestamp with time zone, integer, character varying, character varying, character varying, character varying, character varying, character varying, character varying, boolean, bigint, character varying, character varying, character varying, character varying, integer, integer, boolean, character varying, character varying, numeric, numeric, character varying, timestamp with time zone, boolean, date, integer, integer, character varying, character varying, character varying, jsonb, character varying, jsonb, integer, character varying, bigint, integer)
-    OWNER TO postgres;

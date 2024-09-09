@@ -15,8 +15,6 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_settle(
 	IN creditamount numeric DEFAULT NULL::numeric,
 	IN debitamount numeric DEFAULT NULL::numeric,
 	IN extrastatus character varying DEFAULT NULL::character varying,
-	IN game_provider_id uuid DEFAULT NULL,
-	IN game_id integer DEFAULT NULL,
 	INOUT sporttype INTEGER DEFAULT NULL,
 	INOUT StatusCode character varying DEFAULT '0',
 	INOUT ErrMsg text DEFAULT '')
@@ -34,7 +32,7 @@ AS $BODY$
         
             IF _sq IS NOT NULL THEN --已完成此交易
                 StatusCode := '101';
-				ErrMsg := 'Duplicate Transaction'
+				ErrMsg := 'Duplicate Transaction';
                 RETURN;
             END IF;
         END IF;
@@ -52,9 +50,7 @@ AS $BODY$
             payout,
             creditAmount,
             debitAmount,
-            extraStatus,
-            game_provider_id,
-			game_id
+            extraStatus
         )
         VALUES
         (
@@ -69,9 +65,7 @@ AS $BODY$
             payout,
             creditAmount,
             debitAmount,
-            extraStatus,
-            game_provider_id,
-			game_id
+            extraStatus
         );
 	GET DIAGNOSTICS _rc = ROW_COUNT;
     IF _rc > 0 THEN
@@ -88,5 +82,3 @@ AS $BODY$
     END IF;
 END ;
 $BODY$;
-ALTER PROCEDURE dbo.bet_bettrans_sbsw_settle(character varying, character varying, character varying, character varying, bigint, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, character varying, integer, integer, integer)
-    OWNER TO postgres;

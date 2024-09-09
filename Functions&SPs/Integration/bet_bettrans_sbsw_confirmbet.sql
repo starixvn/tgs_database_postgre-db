@@ -23,7 +23,7 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_confirmbet(
 LANGUAGE 'plpgsql'
 AS $BODY$
 BEGIN    
-    IF NOT EXISTS (SELECT 1 FROM Bettrans_SBSW_Bet b WHERE b.SQ = bet_bettrans_sbsw_confirmbet.licenseeTxId AND b.refId = bet_bettrans_sbsw_confirmbet.refId)
+    IF NOT EXISTS (SELECT 1 FROM dbo.Bettrans_SBSW_Bet b WHERE b.SQ = bet_bettrans_sbsw_confirmbet.licenseeTxId AND b.refId = bet_bettrans_sbsw_confirmbet.refId)
 	THEN 
 		statuscode := '102';
 		errmsg := 'No Data';

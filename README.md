@@ -1,14 +1,14 @@
 # postgre-db
 ## dbo.bet_bettrans_sbsw_settle_xtest
 ## remove param: tickettype, SPResult
-## add param: game_provider_id [uuid], game_id [integer], StatusCode [character varying], ErrMsg [TEXT]
+## add param: StatusCode [character varying], ErrMsg [TEXT]
 ## Settle/Unsettle/Resettle call with all param
 
 ###########################
 
 ## dbo.bet_bettrans_sbsw_bet_xtest
 ## remove param: tickettype, SPResult
-## add param: game_provider_id [uuid], game_id [integer], StatusCode [character varying], ErrMsg [TEXT]
+## add param: StatusCode [character varying], ErrMsg [TEXT]
 ## PlaceBet/PlaceBetParlay call with all param
 
 ###########################
