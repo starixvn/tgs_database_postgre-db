@@ -10,35 +10,26 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_cancelbet(
 LANGUAGE 'plpgsql'
 AS $BODY$
 	DECLARE _sq bigint:= null;
-BEGIN    
-        SELECT SBSW.SQ
-        INTO _sq
-        FROM dbo.Bettrans_SBSW_Bet AS SBSW WHERE SBSW.refId = bet_bettrans_sbsw_cancelbet.refId
-        ORDER BY SQ DESC 
-        LIMIT 1;
-        
-        /*IF _TicketType IS NULL THEN --查無此交易
-            SELECT -1 INTO SPResult;
-            RETURN;
-        END IF;
-        
-        IF _TicketType = 3 THEN --CancelBet
-            SELECT -2 INTO SPResult;
-            RETURN;
-        END IF;
-        
-        IF _TicketType = 2 THEN --ConfirmBet
-            SELECT -3 AS SPResult;
-            RETURN;
-        END IF;*/
-        
-        UPDATE dbo.Bettrans_SBSW_Bet
-        SET
-            action = bet_bettrans_sbsw_cancelbet.action,
-           operationId = bet_bettrans_sbsw_cancelbet.operationId,
-            updateTime = bet_bettrans_sbsw_cancelbet.updateTime,
-            debitAmount = bet_bettrans_sbsw_cancelbet.debitAmount,
-            creditAmount = bet_bettrans_sbsw_cancelbet.creditAmount
-        WHERE SQ = _sq;
+BEGIN   
+	IF NOT EXISTS (SELECT 1 FROM dbo.Bettrans_SBSW_Bet b WHERE b.refId = bet_bettrans_sbsw_cancelbet.refId)
+	THEN 
+		statuscode := '102';
+		errmsg := 'No Data';
+		RETURN;
+	ELSE	
+		SELECT SBSW.SQ
+		INTO _sq
+		FROM dbo.Bettrans_SBSW_Bet AS SBSW WHERE SBSW.refId = bet_bettrans_sbsw_cancelbet.refId
+		ORDER BY SQ DESC 
+		LIMIT 1;
+		
+		UPDATE dbo.Bettrans_SBSW_Bet
+		SET
+			action = bet_bettrans_sbsw_cancelbet.action,
+			operationId = bet_bettrans_sbsw_cancelbet.operationId,
+			updateTime = bet_bettrans_sbsw_cancelbet.updateTime,
+			AdjustAmount = bet_bettrans_sbsw_cancelbet.creditAmount - bet_bettrans_sbsw_cancelbet.debitAmount
+		WHERE SQ = _sq;
+	END IF;
 END ;
 $BODY$;
