@@ -3,9 +3,9 @@
 	2024-09-05
 */
  
--- DROP PROCEDURE IF EXISTS dbo.bettrans_sabaplus_bet_insert(character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying, bigint);
+-- DROP PROCEDURE IF EXISTS dbo.bet_bettrans_sabaplus_bet_insert(character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying, bigint);
 
-CREATE OR REPLACE PROCEDURE dbo.bettrans_sabaplus_bet_insert(
+CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(
 	IN seq character varying,
 	IN operatorcustid character varying,
 	IN ticketno character varying,
@@ -34,7 +34,7 @@ CREATE OR REPLACE PROCEDURE dbo.bettrans_sabaplus_bet_insert(
 LANGUAGE 'plpgsql'
 AS $BODY$
 BEGIN
-	INSERT INTO dbo.bettrans_SabaPlus_Bet 
+	INSERT INTO dbo.bet_bettrans_SabaPlus_Bet 
 	(	Seq
 		,OperatorCustId	
 		,GameType		
@@ -94,10 +94,10 @@ BEGIN
 END;
 $BODY$;
 -----------------------------------------------------------------------------
-ALTER PROCEDURE dbo.bettrans_sabaplus_bet_insert(character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying, bigint)
+ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying, bigint)
     OWNER TO postgres;
 -----------------------------------------------------------------------------
-ALTER PROCEDURE dbo.bettrans_sabaplus_bet_insert(character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying, bigint)
+ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying, bigint)
  OWNER TO postgres;
 
 
@@ -105,7 +105,7 @@ ALTER PROCEDURE dbo.bettrans_sabaplus_bet_insert(character varying, character va
 ----Place bet
 --- select   * from dbo.players limit 10
 	
-	CALL dbo.bettrans_sabaplus_bet_insert(
+	CALL dbo.bet_bettrans_sabaplus_bet_insert(
 		seq => '56gh60f1-e36f-4ad1-86ff'
 		,operatorcustid =>'4uo0gcqkvze1'
 		,ticketno	=> '12345654323'	
@@ -128,7 +128,7 @@ ALTER PROCEDURE dbo.bettrans_sabaplus_bet_insert(character varying, character va
 	----RESTART IDENTITY;
 
 ----Place bet and Settle
-	CALL dbo.bettrans_sabaplus_bet_insert(
+	CALL dbo.bet_bettrans_sabaplus_bet_insert(
 		seq => 'hj98s34j-h4gh-4jh1-23ee'
 		,operatorcustid =>'4uo0gcqkvze1'
 		,ticketno	=> '12345654324'	

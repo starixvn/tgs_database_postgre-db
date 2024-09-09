@@ -2,7 +2,7 @@
 	Louisa: insert data into dbo.Bettrans_SabaPlus_Settle
 	2024-09-05
 */
- DROP PROCEDURE IF EXISTS dbo.Bettrans_SabaPlus_Settle_Insert (
+ DROP PROCEDURE IF EXISTS dbo.bet_bettrans_sabaplus_settle_insert (
 	 character varying(64)
 	,character varying(32)	
 	,character varying(200)
@@ -24,7 +24,7 @@
 	,character varying(500)		
 	,character varying(500)		
 );
-CREATE OR REPLACE PROCEDURE dbo.Bettrans_SabaPlus_Settle_Insert
+CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sabaplus_settle_insert
 (
 	 IN Seq				character varying(64)
 	,IN OperatorCustId	character varying(32)	
@@ -101,7 +101,7 @@ BEGIN
 END;
 $BODY$;
 -----------------------------------------------------------------------------
-ALTER PROCEDURE dbo.Bettrans_SabaPlus_Settle_Insert
+ALTER PROCEDURE dbo.bet_bettrans_sabaplus_settle_insert
 (
 	 character varying(64)
 	,character varying(32)	
@@ -129,7 +129,7 @@ ALTER PROCEDURE dbo.Bettrans_SabaPlus_Settle_Insert
  
 --------- SAMPLE ------------------------------------------------------------
 
-CALL dbo.Bettrans_SabaPlus_Settle_Insert
+CALL dbo.bet_bettrans_sabaplus_settle_insert
 (
 	 seq 			=> 'v45tgf78-d4dg-sad1-jh7u'
 	,operatorcustid =>'4uo0gcqkvze1'
