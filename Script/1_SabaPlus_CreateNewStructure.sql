@@ -4,6 +4,10 @@
 */
 
 
+----------------------------------------------------
+--1. TABLE dbo.bettrans_SabaPlus_Bet;
+----------------------------------------------------
+
 ---drop table if exists dbo.bettrans_SabaPlus_Bet;
 
 CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SabaPlus_Bet_sq_seq
@@ -19,10 +23,10 @@ ALTER SEQUENCE dbo.bettrans_SabaPlus_Bet_sq_seq
 CREATE TABLE dbo.bettrans_SabaPlus_Bet 
 (
 	 SQ				bigint NOT NULL DEFAULT  nextval('dbo.bettrans_SabaPlus_Bet_sq_seq'::regclass) 
-	,Seq			character varying(32) 
+	,Seq			character varying(36) 
 	,OperatorCustId	character varying(32)	NOT NULL
 	,GameType		character varying(50)	NOT NULL
-	,Bettype		integer					
+	,Bettype		integer									
 	,GameRoundId	character varying(100)
 	,GameId			character varying(50)	NOT NULL	
 	,IpAddress		character varying(25)	
@@ -44,21 +48,35 @@ CREATE TABLE dbo.bettrans_SabaPlus_Bet
 	,CreateTime		timestamp with time zone NOT NULL
 	,UpdateTime		timestamp with time zone NOT NULL
 	,ExtraInfo		character varying(500)		
-	,Action			character varying(100) NOT NULL
+	,SourceName		character varying(100) NOT NULL
+	,TicketStatus	character varying(100) NOT NULL
 );
+
+--Primary key
+ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet 
+DROP CONSTRAINT IF EXISTS pk_bettrans_SabaPlus_Bet;
+
+ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet
+    ADD CONSTRAINT pk_bettrans_SabaPlus_Bet PRIMARY KEY (sq);
+
+--Unique key
+ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet 
+DROP CONSTRAINT IF EXISTS uk_bettrans_SabaPlus_Bet_Seq_TicketNo;
+
+ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet
+    ADD CONSTRAINT uk_bettrans_SabaPlus_Bet_Seq_TicketNo UNIQUE (Seq,TicketNo);
 
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_bet
     OWNER to postgres;
 
-
 ALTER SEQUENCE dbo.bettrans_SabaPlus_Bet_sq_seq
     OWNED BY dbo.bettrans_SabaPlus_Bet.sq;
 
--------------------------------------------------------------------------
-
+----------------------------------------------------
+--2. TABLE dbo.bettrans_SabaPlus_Settle;
+----------------------------------------------------
 	
 ---drop table if exists dbo.bettrans_SabaPlus_Settle;
-
 CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SabaPlus_Settle_sq_seq
     INCREMENT 1
     START 1
@@ -69,11 +87,10 @@ CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SabaPlus_Settle_sq_seq
 ALTER SEQUENCE dbo.bettrans_SabaPlus_Settle_sq_seq
     OWNER TO postgres;
 
-
 CREATE TABLE dbo.bettrans_SabaPlus_Settle 
 (
 	 SQ				bigint					NOT NULL DEFAULT nextval('dbo.bettrans_SabaPlus_Settle_sq_seq'::regclass) 
-	,Seq			character varying(64)	NOT NULL	
+	,Seq			character varying(36)	NOT NULL	
 	,OperatorCustId	character varying(32)	NOT NULL			
 	,Bettype		integer					 
 	,GameRoundId	character varying(100)
@@ -94,8 +111,17 @@ CREATE TABLE dbo.bettrans_SabaPlus_Settle
 	,PrizeName		character varying(500)	
 	,CreateTime		timestamp with time zone	NOT NULL
 	,UpdateTime		timestamp with time zone	NOT NULL
-	,Action			character varying(100) 		NOT NULL
+	,SourceName		character varying(100) NOT NULL
+	,TicketStatus	character varying(100) NOT NULL
 );
+
+--Primary key
+ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle 
+DROP CONSTRAINT IF EXISTS pk_bettrans_SabaPlus_Settle;
+
+ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle
+    ADD CONSTRAINT pk_bettrans_SabaPlus_Settle PRIMARY KEY (sq);
+
 
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle
     OWNER to postgres;
@@ -103,4 +129,26 @@ ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle
 ALTER SEQUENCE dbo.bettrans_SabaPlus_Settle_sq_seq
     OWNED BY dbo.bettrans_SabaPlus_Settle.sq;
 
+----------------------------------------------------
+--3. TABLE dbo.SystemSetting;
+----------------------------------------------------
 
+--DROP TABLE IF EXISTS dbo.SystemSetting 
+
+CREATE TABLE dbo.SystemSetting 
+(
+	 KeyName		character varying(200) NOT NULL
+	,KeyValue	character varying(500) NOT NULL
+)
+
+ALTER TABLE IF EXISTS dbo.SystemSetting 
+DROP CONSTRAINT IF EXISTS pk_SystemSetting ;
+
+ALTER TABLE IF EXISTS  dbo.SystemSetting 
+    ADD CONSTRAINT pk_SystemSetting PRIMARY KEY (KeyName);
+
+
+
+
+
+	
