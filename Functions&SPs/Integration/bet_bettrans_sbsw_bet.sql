@@ -60,7 +60,7 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_bet(
 	IN extra jsonb,
 	IN parlaytype character varying,
 	IN detail jsonb,
-	IN refid character varying
+	IN refid character varying,
 	INOUT licenseetxid bigint DEFAULT NULL::bigint,
 	INOUT StatusCode character varying DEFAULT '0',
 	INOUT ErrMsg TEXT DEFAULT '')
