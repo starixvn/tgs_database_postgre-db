@@ -4,7 +4,7 @@
 
 CREATE OR REPLACE PROCEDURE bet.bet_rounds_set(
 	IN id uuid DEFAULT NULL::uuid,
-	IN created_on timestamp with time zone DEFAULT NULL,
+	IN created_on timestamp with time zone DEFAULT NULL, --remove later
 	IN external_round_id character varying DEFAULT NULL::character varying, --use txid
 	IN game_provider_id uuid DEFAULT NULL::uuid,
 	IN player_code text DEFAULT NULL::text, --use [change type character varying -> text]
@@ -13,24 +13,24 @@ CREATE OR REPLACE PROCEDURE bet.bet_rounds_set(
 	IN status character varying DEFAULT NULL, --use status [change type smallint -> character varying]
 	IN game_provider_configuration_id uuid DEFAULT NULL::uuid,
 	IN wallet_id uuid DEFAULT NULL::uuid,
-	IN closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
-	IN updated_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
+	IN closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
+	IN updated_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
 	IN brand_id uuid DEFAULT NULL::uuid, --use
 	IN external_created_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
 	IN external_closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --use winlostDate
-	IN bet_amount numeric DEFAULT NULL::numeric,
-	IN valid_bet_amount numeric DEFAULT NULL::numeric,
-	IN settle_amount numeric DEFAULT NULL::numeric,
-	IN commission numeric DEFAULT NULL::numeric,
-	IN turnover numeric DEFAULT NULL::numeric,
-	IN win_loss numeric DEFAULT 0,
-	IN tie_bet_adjustment numeric DEFAULT NULL::numeric,
-	IN client_status smallint DEFAULT NULL::smallint,
-	IN reopen_turnover_adjustment numeric DEFAULT NULL::numeric,
-	IN reopened_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
-	IN effective_betting_percentage numeric DEFAULT NULL::numeric,
+	IN bet_amount numeric DEFAULT NULL::numeric, --remove later
+	IN valid_bet_amount numeric DEFAULT NULL::numeric, --remove later
+	IN settle_amount numeric DEFAULT NULL::numeric, --remove later
+	IN commission numeric DEFAULT NULL::numeric, --remove later
+	IN turnover numeric DEFAULT NULL::numeric, --remove later
+	IN win_loss numeric DEFAULT 0, --remove later
+	IN tie_bet_adjustment numeric DEFAULT NULL::numeric, --remove later
+	IN client_status smallint DEFAULT NULL::smallint, --remove later
+	IN reopen_turnover_adjustment numeric DEFAULT NULL::numeric, --remove later
+	IN reopened_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
+	IN effective_betting_percentage numeric DEFAULT NULL::numeric, --remove later
 	IN payout numeric DEFAULT 0, --use payout
-	IN bet_type integer DEFAULT NULL::integer,
+	IN bet_type integer DEFAULT NULL::integer, --remove later
 	IN licenseetxid bigint DEFAULT NULL::bigint, --use licenseeTxid
 	IN extrastatus character varying default null, --use extraStatus
 	IN isOnlyWinlostDateChanged boolean DEFAULT null, --use isOnlyWinlostDateChanged 
