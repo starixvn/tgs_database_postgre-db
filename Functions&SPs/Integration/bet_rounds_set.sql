@@ -1,40 +1,27 @@
--- PROCEDURE: bet.bet_rounds_set(uuid, timestamp with time zone, character varying, uuid, text, integer, character varying, smallint, uuid, uuid, timestamp with time zone, timestamp with time zone, uuid, timestamp with time zone, timestamp with time zone, numeric, numeric, numeric, numeric, numeric, numeric, smallint, numeric, timestamp with time zone, numeric, numeric, numeric, numeric, bigint, character varying, integer, text)
+-- PROCEDURE: bet.bet_rounds_set(uuid, character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, character varying, text)
 
--- DROP PROCEDURE IF EXISTS bet.bet_rounds_set(uuid, timestamp with time zone, character varying, uuid, text, integer, character varying, smallint, uuid, uuid, timestamp with time zone, timestamp with time zone, uuid, timestamp with time zone, timestamp with time zone, numeric, numeric, numeric, numeric, numeric, numeric, smallint, numeric, timestamp with time zone, numeric, numeric, numeric, numeric, bigint, character varying, integer, text);
+-- DROP PROCEDURE IF EXISTS bet.bet_rounds_set(uuid, character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, character varying, text);
 
 CREATE OR REPLACE PROCEDURE bet.bet_rounds_set(
 	IN id uuid DEFAULT NULL::uuid,
-	--IN created_on timestamp with time zone DEFAULT NULL, --remove later
-	IN external_round_id character varying DEFAULT NULL::character varying, --use txid
+	IN external_round_id character varying DEFAULT NULL::character varying,
 	IN game_provider_id uuid DEFAULT NULL::uuid,
-	IN player_code text DEFAULT NULL::text, --use [change type character varying -> text]
-	IN game_id integer DEFAULT NULL::integer, --use
+	IN player_code text DEFAULT NULL::text,
+	IN game_id integer DEFAULT NULL::integer,
 	IN currency_code character varying DEFAULT NULL::character varying,
-	IN status character varying DEFAULT NULL, --use status [change type smallint -> character varying]
+	IN status character varying DEFAULT NULL::character varying,
 	IN game_provider_configuration_id uuid DEFAULT NULL::uuid,
+	IN licenseetxid bigint DEFAULT NULL::bigint,
 	IN wallet_id uuid DEFAULT NULL::uuid,
-	IN refid character varying default null, 
-	--IN updated_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
-	IN brand_id uuid DEFAULT NULL::uuid, --use
+	IN refid character varying DEFAULT NULL::character varying,
+	IN brand_id uuid DEFAULT NULL::uuid,
 	IN external_created_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
-	IN external_closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --use winlostDate
-	--IN bet_amount numeric DEFAULT NULL::numeric, --remove later
-	--IN valid_bet_amount numeric DEFAULT NULL::numeric, --remove later
-	--IN settle_amount numeric DEFAULT NULL::numeric, --remove later
-	--IN commission numeric DEFAULT NULL::numeric, --remove later
-	--IN turnover numeric DEFAULT NULL::numeric, --remove later
-	--IN win_loss numeric DEFAULT 0, --remove later
-	--IN tie_bet_adjustment numeric DEFAULT NULL::numeric, --remove later
-	--IN client_status smallint DEFAULT NULL::smallint, --remove later
-	--IN reopen_turnover_adjustment numeric DEFAULT NULL::numeric, --remove later
-	--IN reopened_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
-	--IN effective_betting_percentage numeric DEFAULT NULL::numeric, --remove later
-	IN payout numeric DEFAULT 0, --use payout
-	--IN bet_type integer DEFAULT NULL::integer, --remove later
-	IN extrastatus character varying default null, --use extraStatus
-	IN isOnlyWinlostDateChanged boolean DEFAULT null, --use isOnlyWinlostDateChanged 
+	IN external_closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
+	IN payout numeric DEFAULT 0,
+	IN extrastatus character varying DEFAULT NULL::character varying,
+	IN isonlywinlostdatechanged boolean DEFAULT NULL::boolean,
 	IN actiontype character varying DEFAULT NULL::character varying,
-	INOUT StatusCode character varying DEFAULT '0'::character varying,
+	INOUT statuscode character varying DEFAULT '0'::character varying,
 	INOUT errmsg text DEFAULT ''::text)
 LANGUAGE 'plpgsql'
 AS $BODY$
@@ -64,7 +51,7 @@ BEGIN
 			SELECT b.betamount, b.betamount, b.bettype
 			INTO p_bet_amount, p_valid_bet_amount, p_bet_type
 			FROM dbo.bettrans_sbsw_bet b
-			WHERE b.refid = bet_rounds_set.refid and CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
+			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
 			
 			INSERT INTO bet.rounds (
 			id,
@@ -308,5 +295,5 @@ BEGIN
 	END IF;
 END;
 $BODY$;
-
-
+ALTER PROCEDURE bet.bet_rounds_set(uuid, character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, character varying, text)
+    OWNER TO postgres;
