@@ -13,7 +13,7 @@ CREATE OR REPLACE PROCEDURE bet.bet_rounds_set(
 	IN status character varying DEFAULT NULL, --use status [change type smallint -> character varying]
 	IN game_provider_configuration_id uuid DEFAULT NULL::uuid,
 	IN wallet_id uuid DEFAULT NULL::uuid,
-	--IN closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
+	IN refid character varying default null, 
 	--IN updated_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
 	IN brand_id uuid DEFAULT NULL::uuid, --use
 	IN external_created_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
@@ -64,7 +64,7 @@ BEGIN
 			SELECT b.betamount, b.betamount, b.bettype
 			INTO p_bet_amount, p_valid_bet_amount, p_bet_type
 			FROM dbo.bettrans_sbsw_bet b
-			WHERE CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
+			WHERE b.refid = bet_rounds_set.refid and CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
 			
 			INSERT INTO bet.rounds (
 			id,
@@ -145,7 +145,7 @@ BEGIN
 			SELECT b.betamount, b.actualamount
 			INTO p_bet_amount, p_actual_bet_amount
 			FROM dbo.Bettrans_SBSW_Bet b
-			WHERE CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
+			WHERE b.refid = bet_rounds_set.refid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
 			
 			SELECT bg.effective_betting_percentage
 			INTO p_effective_betting_percentage
@@ -204,7 +204,7 @@ BEGIN
 			SELECT b.betamount, b.actualamount
 			INTO p_bet_amount, p_actual_bet_amount
 			FROM dbo.Bettrans_SBSW_Bet b
-			WHERE CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
+			WHERE b.refid = bet_rounds_set.refid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
 			
 			SELECT bg.effective_betting_percentage
 			INTO p_effective_betting_percentage
@@ -278,17 +278,17 @@ BEGIN
 					WHEN COALESCE(extrastatus, '') = '' OR extrastatus ilike 'void cashout' THEN false ELSE true 
 				END
 			INTO p_is_cash_out;
-		
+			
 			SELECT b.betamount, b.actualamount
 			INTO p_bet_amount, p_actual_bet_amount
 			FROM dbo.Bettrans_SBSW_Bet b
-			WHERE CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
+			WHERE b.refid = bet_rounds_set.refid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
 			
 			SELECT bg.effective_betting_percentage
 			INTO p_effective_betting_percentage
 			FROM dbo.brand_games bg
 			WHERE bg.brand_id = bet_rounds_set.brand_id AND bg.game_id = bet_rounds_set.game_id;	
-
+			
 			UPDATE bet.rounds br
 			SET status = 1,
 				updated_on = current_timestamp,

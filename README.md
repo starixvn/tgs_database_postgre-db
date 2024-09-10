@@ -7,13 +7,14 @@
 ## remove param: 
 created_on, closed_on, updated_on, bet_amount, valid_bet_amount, settle_amount, commission, turnover, win_loss, 
 tie_bet_adjustment, client_status, reopen_turnover_adjustment, reopened_on, effective_betting_percentage, bet_type
-## add param: extrastatus [character varying], isOnlyWinlostDateChanged [boolean]
+## add param: extrastatus [character varying], isOnlyWinlostDateChanged [boolean], refid [character varying]
 ## change param: status [smallint -> character varying], player_code [character varying -> text]
 ## Settle call with these param:
 id
 extrastatus
 external_round_id 
 brand_id 
+refid
 game_id
 external_closed_on --winlostdate
 status
@@ -24,6 +25,7 @@ actiontype
 id
 extrastatus
 external_round_id 
+refid
 brand_id 
 game_id
 status
@@ -35,6 +37,7 @@ extrastatus
 external_round_id 
 brand_id 
 game_id
+refid
 isOnlyWinlostDateChanged
 external_closed_on --winlostdate
 status
