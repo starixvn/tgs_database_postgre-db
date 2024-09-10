@@ -4,7 +4,7 @@
 
 CREATE OR REPLACE PROCEDURE bet.bet_rounds_set(
 	IN id uuid DEFAULT NULL::uuid,
-	IN created_on timestamp with time zone DEFAULT NULL, --remove later
+	--IN created_on timestamp with time zone DEFAULT NULL, --remove later
 	IN external_round_id character varying DEFAULT NULL::character varying, --use txid
 	IN game_provider_id uuid DEFAULT NULL::uuid,
 	IN player_code text DEFAULT NULL::text, --use [change type character varying -> text]
@@ -13,25 +13,24 @@ CREATE OR REPLACE PROCEDURE bet.bet_rounds_set(
 	IN status character varying DEFAULT NULL, --use status [change type smallint -> character varying]
 	IN game_provider_configuration_id uuid DEFAULT NULL::uuid,
 	IN wallet_id uuid DEFAULT NULL::uuid,
-	IN closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
-	IN updated_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
+	--IN closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
+	--IN updated_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
 	IN brand_id uuid DEFAULT NULL::uuid, --use
 	IN external_created_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
 	IN external_closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --use winlostDate
-	IN bet_amount numeric DEFAULT NULL::numeric, --remove later
-	IN valid_bet_amount numeric DEFAULT NULL::numeric, --remove later
-	IN settle_amount numeric DEFAULT NULL::numeric, --remove later
-	IN commission numeric DEFAULT NULL::numeric, --remove later
-	IN turnover numeric DEFAULT NULL::numeric, --remove later
-	IN win_loss numeric DEFAULT 0, --remove later
-	IN tie_bet_adjustment numeric DEFAULT NULL::numeric, --remove later
-	IN client_status smallint DEFAULT NULL::smallint, --remove later
-	IN reopen_turnover_adjustment numeric DEFAULT NULL::numeric, --remove later
-	IN reopened_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
-	IN effective_betting_percentage numeric DEFAULT NULL::numeric, --remove later
+	--IN bet_amount numeric DEFAULT NULL::numeric, --remove later
+	--IN valid_bet_amount numeric DEFAULT NULL::numeric, --remove later
+	--IN settle_amount numeric DEFAULT NULL::numeric, --remove later
+	--IN commission numeric DEFAULT NULL::numeric, --remove later
+	--IN turnover numeric DEFAULT NULL::numeric, --remove later
+	--IN win_loss numeric DEFAULT 0, --remove later
+	--IN tie_bet_adjustment numeric DEFAULT NULL::numeric, --remove later
+	--IN client_status smallint DEFAULT NULL::smallint, --remove later
+	--IN reopen_turnover_adjustment numeric DEFAULT NULL::numeric, --remove later
+	--IN reopened_on timestamp with time zone DEFAULT NULL::timestamp with time zone, --remove later
+	--IN effective_betting_percentage numeric DEFAULT NULL::numeric, --remove later
 	IN payout numeric DEFAULT 0, --use payout
-	IN bet_type integer DEFAULT NULL::integer, --remove later
-	IN licenseetxid bigint DEFAULT NULL::bigint, --use licenseeTxid
+	--IN bet_type integer DEFAULT NULL::integer, --remove later
 	IN extrastatus character varying default null, --use extraStatus
 	IN isOnlyWinlostDateChanged boolean DEFAULT null, --use isOnlyWinlostDateChanged 
 	IN actiontype character varying DEFAULT NULL::character varying,
@@ -45,6 +44,7 @@ AS $BODY$
 			p_bet_type integer;
 			p_is_cash_out boolean; 
 			p_effective_betting_percentage numeric;
+			p_client_status smallint;
 BEGIN
 	IF actiontype IN ('ConfirmBet', 'ConfirmBetParlay')
 	THEN
@@ -64,7 +64,7 @@ BEGIN
 			SELECT b.betamount, b.betamount, b.bettype
 			INTO p_bet_amount, p_valid_bet_amount, p_bet_type
 			FROM dbo.bettrans_sbsw_bet b
-			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND b.txid = CAST(bet_rounds_set.external_round_id AS BIGINT);
+			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
 			
 			INSERT INTO bet.rounds (
 			id,
@@ -126,7 +126,13 @@ BEGIN
 			);
 		END IF;
 	ELSIF actiontype = 'Settle' THEN 
-		IF NOT EXISTS (SELECT 1 FROM bet.rounds br WHERE br.id = bet_rounds_set.id) THEN
+		IF NOT EXISTS (SELECT 1 
+						FROM bet.rounds br 
+						WHERE br.external_round_id = bet_rounds_set.external_round_id 
+							AND br.brand_id = bet_rounds_set.brand_id
+							AND br.game_id = bet_rounds_set.game_id
+							AND br.status = 1) 
+		THEN
 			statuscode := '102';
 			errmsg := 'No Data';
 			RETURN;
@@ -139,7 +145,7 @@ BEGIN
 			SELECT b.betamount, b.actualamount
 			INTO p_bet_amount, p_actual_bet_amount
 			FROM dbo.Bettrans_SBSW_Bet b
-			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND b.txid = CAST(bet_rounds_set.external_round_id AS BIGINT);
+			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
 			
 			SELECT bg.effective_betting_percentage
 			INTO p_effective_betting_percentage
@@ -167,26 +173,38 @@ BEGIN
 									WHEN bet_rounds_set.status IN ('lose', 'half lose') THEN 4
 									WHEN bet_rounds_set.status IN ('draw') THEN 5
 									ELSE br.client_status END,
-				reopen_turnover_adjustment = br.reopen_turnover_adjustment, --TODO
-				reopened_on = br.reopened_on,	--TODO
-				effective_betting_percentage = p_effective_betting_percentage --TODO		
-			WHERE br.id = bet_rounds_set.id;
+				effective_betting_percentage = p_effective_betting_percentage 	
+			WHERE br.external_round_id = bet_rounds_set.external_round_id 
+				AND br.brand_id = bet_rounds_set.brand_id
+				AND br.game_id = bet_rounds_set.game_id;
 		END IF;
 	ELSIF actiontype = 'Resettle' THEN 
-		IF NOT EXISTS (SELECT 1 FROM bet.rounds br WHERE br.id = bet_rounds_set.id) THEN
+		IF NOT EXISTS (SELECT 1 
+						FROM bet.rounds br 
+						WHERE br.external_round_id = bet_rounds_set.external_round_id 
+							AND br.brand_id = bet_rounds_set.brand_id
+							AND br.game_id = bet_rounds_set.game_id 
+							AND br.status = 2) 
+		THEN
 			statuscode := '102';
 			errmsg := 'No Data';
 			RETURN;
 		ELSE
 			SELECT CASE 
 					WHEN COALESCE(extrastatus, '') = '' OR extrastatus ilike 'void cashout' THEN false ELSE true 
+				END,
+				CASE 
+					WHEN bet_rounds_set.status IN ('void', 'reject', 'refund') THEN 2
+					WHEN bet_rounds_set.status IN ('won', 'half won') THEN 3
+					WHEN bet_rounds_set.status IN ('lose', 'half lose') THEN 4
+					WHEN bet_rounds_set.status IN ('draw') THEN 5
 				END
-			INTO p_is_cash_out;
+			INTO p_is_cash_out, p_client_status;
 		
 			SELECT b.betamount, b.actualamount
 			INTO p_bet_amount, p_actual_bet_amount
 			FROM dbo.Bettrans_SBSW_Bet b
-			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND b.txid = CAST(bet_rounds_set.external_round_id AS BIGINT);
+			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
 			
 			SELECT bg.effective_betting_percentage
 			INTO p_effective_betting_percentage
@@ -226,16 +244,32 @@ BEGIN
 									WHEN bet_rounds_set.status IN ('draw') THEN 5
 									ELSE br.client_status 
 								END,
-				reopen_turnover_adjustment = br.reopen_turnover_adjustment, --TODO
-				reopened_on = br.reopened_on, --TODO
+				reopen_turnover_adjustment = CASE 
+												WHEN isOnlyWinlostDateChanged = true THEN br.reopen_turnover_adjustment
+												WHEN br.settle_amount != bet_rounds_set.payout OR br.client_status != p_client_status THEN br.turnover
+												ELSE br.reopen_turnover_adjustment
+											END,
+				reopened_on = CASE 
+								WHEN isOnlyWinlostDateChanged = true THEN br.reopened_on
+								WHEN br.settle_amount != bet_rounds_set.payout OR br.client_status != p_client_status THEN current_timestamp
+								ELSE br.reopened_on
+							END,
 				effective_betting_percentage = CASE 
 													WHEN isOnlyWinlostDateChanged = true THEN br.effective_betting_percentage
 													ELSE p_effective_betting_percentage
-												END --TODO
-			WHERE br.id = bet_rounds_set.id;	
+												END
+			WHERE br.external_round_id = bet_rounds_set.external_round_id 
+				AND br.brand_id = bet_rounds_set.brand_id
+				AND br.game_id = bet_rounds_set.game_id;	
 		END IF;
 	ELSIF actiontype = 'Unsettle' THEN 
-		IF NOT EXISTS (SELECT 1 FROM bet.rounds br WHERE br.id = bet_rounds_set.id) THEN
+		IF NOT EXISTS (SELECT 1 
+						FROM bet.rounds br 
+						WHERE br.external_round_id = bet_rounds_set.external_round_id 
+							AND br.brand_id = bet_rounds_set.brand_id
+							AND br.game_id = bet_rounds_set.game_id 
+							AND br.status = 2) 
+		THEN
 			statuscode := '102';
 			errmsg := 'No Data';
 			RETURN;
@@ -248,7 +282,7 @@ BEGIN
 			SELECT b.betamount, b.actualamount
 			INTO p_bet_amount, p_actual_bet_amount
 			FROM dbo.Bettrans_SBSW_Bet b
-			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND b.txid = CAST(bet_rounds_set.external_round_id AS BIGINT);
+			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
 			
 			SELECT bg.effective_betting_percentage
 			INTO p_effective_betting_percentage
@@ -267,7 +301,9 @@ BEGIN
 				win_loss = 0,
 				client_status = 0,
 				effective_betting_percentage = null
-			WHERE br.id = bet_rounds_set.id;	
+			WHERE br.external_round_id = bet_rounds_set.external_round_id 
+				AND br.brand_id = bet_rounds_set.brand_id
+				AND br.game_id = bet_rounds_set.game_id;
 		END IF;
 	END IF;
 END;
