@@ -50,6 +50,7 @@ CREATE TABLE dbo.bettrans_SabaPlus_Bet
 	,ExtraInfo		character varying(500)		
 	,SourceName		character varying(100) NOT NULL
 	,TicketStatus	character varying(100) NOT NULL
+	,TicketStatusID	smallint				NOT NULL
 );
 
 --Primary key
@@ -59,13 +60,14 @@ DROP CONSTRAINT IF EXISTS pk_bettrans_SabaPlus_Bet;
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet
     ADD CONSTRAINT pk_bettrans_SabaPlus_Bet PRIMARY KEY (sq);
 
---Unique key
+--Unique key TicketNo
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet 
-DROP CONSTRAINT IF EXISTS uk_bettrans_SabaPlus_Bet_Seq_TicketNo;
+DROP CONSTRAINT IF EXISTS uk_bettrans_SabaPlus_Bet_TicketNo;
 
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet
-    ADD CONSTRAINT uk_bettrans_SabaPlus_Bet_Seq_TicketNo UNIQUE (Seq,TicketNo);
+    ADD CONSTRAINT uk_bettrans_SabaPlus_Bet_TicketNo UNIQUE (TicketNo);
 
+--grant
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_bet
     OWNER to postgres;
 
@@ -111,6 +113,7 @@ CREATE TABLE dbo.bettrans_SabaPlus_Settle
 	,UpdateTime		timestamp with time zone	NOT NULL
 	,SourceName		character varying(100) NOT NULL
 	,TicketStatus	character varying(100) NOT NULL
+	,TicketStatusID	smallint				NOT NULL
 );
 
 --Primary key
@@ -120,7 +123,7 @@ DROP CONSTRAINT IF EXISTS pk_bettrans_SabaPlus_Settle;
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle
     ADD CONSTRAINT pk_bettrans_SabaPlus_Settle PRIMARY KEY (sq);
 
-
+---grant
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle
     OWNER to postgres;
 
