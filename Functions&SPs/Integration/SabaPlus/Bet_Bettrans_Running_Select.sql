@@ -36,7 +36,7 @@ BEGIN
 		ON b.operatorcustid = pl.player_code
 	LEFT JOIN dbo.Bettrans_SabaPlus_Settle 
 		ON b.TicketNo = Bettrans_SabaPlus_Settle.TicketNo
-	WHERE b.Action = 'SBL_PlaceBet'
+	WHERE b.SourceName = 'SabaPlus_PlaceBet'
 	--	AND Bettrans_SabaPlus_Settle.TicketNo IS NULL
 		AND  (select extract(min from CURRENT_TIMESTAMP  - b.CreateTime::timestamp) )>= Diff;
 

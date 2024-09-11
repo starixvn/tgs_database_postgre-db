@@ -95,8 +95,6 @@ CREATE TABLE dbo.bettrans_SabaPlus_Settle
 	,Bettype		integer					 
 	,GameRoundId	character varying(100)
 	,GameId			character varying(50)	NOT NULL	
-	,TicketStatus	smallint							
-	,SettleFlag		smallint	
 	,SettleDate		timestamp with time zone NOT NULL
 	,TicketNo		character varying(200)	 NOT NULL
 	,TransactionId	character varying(100)	

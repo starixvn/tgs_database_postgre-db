@@ -203,7 +203,7 @@ ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(character varying, characte
 --- select * from dbo.players limit 10
 	
 	CALL dbo.bet_bettrans_sabaplus_bet_insert(
-		seq => 'bF3B7850-F49A-41BD-A2FE-EA62BD7DDACC'
+		seq => 'AF3B7850-F49A-41BD-A2FE-EA62BD7DDACC'
 		,operatorcustid => '4uo0gcqkvze1'
 		,ticketno	=> '12345654323'	
 		,SourceName	=> 'SabaPlus_PlaceBet'
@@ -225,6 +225,30 @@ ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(character varying, characte
 	select * from dbo.bettrans_SabaPlus_Bet  where seq =  '3781D88A-9180-443F-B405-E660878D0770'
 	----truncate table  dbo.bettrans_SabaPlus_Bet
 
+----EndGame
+	CALL dbo.bet_bettrans_sabaplus_bet_insert(
+		seq 			=> 'bF3B7850-F49A-41BD-A2FE-EA62BD7DDACC'
+		,operatorcustid =>'4uo0gcqkvze1'
+		,ticketno		=>'12345654323'	
+		,SourceName		=> 'SabaPlus_EndGame'
+		,gametype	=>'MaxGame'	
+		,bettype	=> 5401 
+		,gameroundid =>'1234567'	
+		,gameid		=>'5300014'		
+		,settledate	=> '2024-09-07 10:02:22+00'	
+		,transactionid  =>'4678gfqf71'
+		,stake		=> 100.0	
+		,netstake	=> 100.0
+		,actualstake => 100.0	
+		,odds		=> 0.2
+		,payout		=> 140.0
+		,refno		=>null	
+		,statuscode => ''
+		,errmsg 	=> ''
+	)
+	select * from dbo.bettrans_SabaPlus_Settle   
+	----truncate table  dbo.bettrans_SabaPlus_Settle
+	
 ----Place bet and Settle /FreeSpin/ Bonus
 	CALL dbo.bet_bettrans_sabaplus_bet_insert(
 		seq => '18A74C4F-C96A-4678-948B-AC3955632E52'
