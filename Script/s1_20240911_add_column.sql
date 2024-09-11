@@ -1,0 +1,1 @@
+alter table dbo.bettrans_sbsw_settle add isonlywinlostdatechanged boolean;

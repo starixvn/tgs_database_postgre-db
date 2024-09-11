@@ -15,6 +15,7 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_settle(
 	IN creditamount numeric DEFAULT NULL::numeric,
 	IN debitamount numeric DEFAULT NULL::numeric,
 	IN extrastatus character varying DEFAULT NULL::character varying,
+	IN isonlywinlostdatechanged boolean default null,
 	INOUT StatusCode character varying DEFAULT '0',
 	INOUT ErrMsg text DEFAULT '')
 LANGUAGE 'plpgsql'
@@ -49,7 +50,8 @@ BEGIN
 		payout,
 		creditAmount,
 		debitAmount,
-		extraStatus
+		extraStatus,
+		isonlywinlostdatechanged
 	)
 	VALUES
 	(
@@ -64,7 +66,8 @@ BEGIN
 		payout,
 		creditAmount,
 		debitAmount,
-		extraStatus
+		extraStatus,
+		isonlywinlostdatechanged
 	);
 END ;
 $BODY$;
