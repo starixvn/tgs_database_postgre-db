@@ -1,4 +1,4 @@
 # postgre-db
-## dbo.bet_bettrans_sbsw_settle_xtest
-## add param: isonlywinlostdatechanged [boolean]
-## Settle/Unsettle/Resettle call with all param
+## bet.bet_rounds_set_xtest
+## change param: id (IN -> INOUT) 
+## Web not supply id when call ConfirmBet/ConfirmBetParlay, SP auto generate and output that value
