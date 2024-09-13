@@ -23,7 +23,8 @@ CREATE OR REPLACE PROCEDURE bet.Bet_Round_Sabalus_Insert
 	,IN bet_amount						numeric(18,6)			 DEFAULT 0.0
 	,IN settle_amount					numeric					 DEFAULT 0.0
 	,IN win_loss						numeric(18,6)			 DEFAULT 0.0
-	,IN bet_type						integer					 DEFAULT 0.0
+	,IN ExternalGameId					integer					 DEFAULT 0.0
+	,TicketStatusId
 	,INOUT statuscode 	character varying DEFAULT '0'::character varying
 	,INOUT errmsg 		text DEFAULT ''::text
 )

@@ -23,10 +23,9 @@ ALTER SEQUENCE dbo.bettrans_SabaPlus_Bet_sq_seq
 CREATE TABLE dbo.bettrans_SabaPlus_Bet 
 (
 	 SQ				bigint NOT NULL DEFAULT  nextval('dbo.bettrans_SabaPlus_Bet_sq_seq'::regclass) 
-	,Seq			character varying(36) 
 	,OperatorCustId	character varying(32)	NOT NULL
 	,GameType		character varying(50)	NOT NULL
-	,Bettype		integer									
+	,ExternalGameId integer									
 	,GameRoundId	character varying(100)
 	,GameId			character varying(50)	NOT NULL	
 	,IpAddress		character varying(25)	
@@ -42,14 +41,14 @@ CREATE TABLE dbo.bettrans_SabaPlus_Bet
 	,BetChoice		character varying(100)
 	,TableCode		character varying(100)	
 	,CurrencyISO	character varying(10)	
-	,BonusId		character varying(100) NOT NULL DEFAULT '0'	
+	,BonusId		character varying(100)
 	,BonusName		character varying(500)	
 	,PrizeName		character varying(500)	
 	,CreateTime		timestamp with time zone NOT NULL
 	,UpdateTime		timestamp with time zone NOT NULL
 	,ExtraInfo		character varying(500)		
-	,SourceName		character varying(100) NOT NULL
-	,TicketStatus	character varying(100) NOT NULL
+	,SourceName		character varying(100)	NOT NULL
+	,TicketStatus	character varying(100)	NOT NULL
 	,TicketStatusID	smallint				NOT NULL
 );
 
@@ -91,29 +90,28 @@ ALTER SEQUENCE dbo.bettrans_SabaPlus_Settle_sq_seq
 
 CREATE TABLE dbo.bettrans_SabaPlus_Settle 
 (
-	 SQ				bigint					NOT NULL DEFAULT nextval('dbo.bettrans_SabaPlus_Settle_sq_seq'::regclass) 
-	,Seq			character varying(36)	NOT NULL	
-	,OperatorCustId	character varying(32)	NOT NULL			
-	,Bettype		integer					 
-	,GameRoundId	character varying(100)
-	,GameId			character varying(50)	NOT NULL	
-	,SettleDate		timestamp with time zone NOT NULL
-	,TicketNo		character varying(200)	 NOT NULL
-	,TransactionId	character varying(100)	
-	,Stake			decimal(20,6)	NOT NULL DEFAULT 0.0
-	,ActualStake	decimal(20,6)	NOT NULL DEFAULT 0.0	
-	,NetStake		decimal(20,6)	NOT NULL DEFAULT 0.0
-	,Payout			decimal(20,6)	NOT NULL DEFAULT 0.0
-	,Odds			decimal(20,2)	NOT NULL	
-	,CurrencyISO	character varying(10)	
-	,BonusId		character varying(100)	NOT NULL DEFAULT '0'
-	,BonusName		character varying(500)	
-	,PrizeName		character varying(500)	
-	,CreateTime		timestamp with time zone	NOT NULL
-	,UpdateTime		timestamp with time zone	NOT NULL
-	,SourceName		character varying(100) NOT NULL
-	,TicketStatus	character varying(100) NOT NULL
-	,TicketStatusID	smallint				NOT NULL
+	 SQ				BIGINT					NOT NULL DEFAULT nextval('dbo.bettrans_SabaPlus_Settle_sq_seq'::regclass) 	
+	,OperatorCustId	CHARACTER VARYING(32)	NOT NULL			
+	,ExternalGameId	INTEGER					 
+	,GameRoundId	CHARACTER VARYING(100)
+	,GameId			CHARACTER VARYING(50)	NOT NULL	
+	,SettleDate		TIMESTAMP WITH TIME ZONE
+	,TicketNo		CHARACTER VARYING(200)	 NOT NULL
+	,TransactionId	CHARACTER VARYING(100)	
+	,Stake			DECIMAL(20,6)	NOT NULL DEFAULT 0.0
+	,ActualStake	DECIMAL(20,6)	NOT NULL DEFAULT 0.0	
+	,NetStake		DECIMAL(20,6)	NOT NULL DEFAULT 0.0
+	,Payout			DECIMAL(20,6)	NOT NULL DEFAULT 0.0
+	,Odds			DECIMAL(20,2)	NOT NULL	
+	,CurrencyISO	CHARACTER VARYING(10)	
+	,BonusId		CHARACTER VARYING(100)
+	,BonusName		CHARACTER VARYING(500)	
+	,PrizeName		CHARACTER VARYING(500)	
+	,CreateTime		TIMESTAMP WITH TIME ZONE	NOT NULL
+	,UpdateTime		TIMESTAMP WITH TIME ZONE	NOT NULL
+	,SourceName		CHARACTER VARYING(100)		NOT NULL
+	,TicketStatus	CHARACTER VARYING(100)		NOT NULL
+	,TicketStatusID	SMALLINT					NOT NULL
 );
 
 --Primary key
