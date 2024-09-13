@@ -104,7 +104,7 @@ BEGIN
 				0,								--turnover
 				0,								--win_loss
 				NULL,							--tie_bet_adjustment
-				0,								--client_status
+				1,								--client_status
 				NULL,							--reopen_turnover_adjustment
 				NULL,							--reopened_on
 				NULL,							--effective_betting_percentage
@@ -255,7 +255,7 @@ BEGIN
 				settle_amount = 0,
 				turnover = 0,
 				win_loss = 0,
-				client_status = 0
+				client_status = 1
 			WHERE br.external_round_id = bet_rounds_set.external_round_id 
 				AND br.brand_id = bet_rounds_set.brand_id
 				AND br.game_id = bet_rounds_set.game_id;
