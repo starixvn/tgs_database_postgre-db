@@ -1,16 +1,18 @@
 /*
-	Louisa: insert data into dbo.Bettrans_SabaPlus_Bet
+	Louisa: insert data into dbo.Bettrans_Bet
 	2024-09-05
 */
  
--- DROP PROCEDURE IF EXISTS dbo.bet_bettrans_sabaplus_bet_insert(character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying, character varying, bigint, character varying, text);
-CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(
+-- DROP PROCEDURE IF EXISTS dbo.bet_bettrans_bet_insert(character varying, character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying, character varying, bigint, character varying, text);
+
+CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_bet_insert(
 	IN seq 				character varying,
 	IN operatorcustid 	character varying,
 	IN ticketno 		character varying,
-	IN SourceName		character varying(100),
+	IN Action			character varying(100),	
+	IN GameProviderCode	character varying(16),
 	IN gametype 		character varying DEFAULT NULL::character varying,
-	IN bettype 			integer DEFAULT 0,
+	IN ExternalGameId	integer DEFAULT 0,
 	IN gameroundid 		character varying DEFAULT NULL::character varying,
 	IN gameid 			character varying DEFAULT NULL::character varying,
 	IN ipaddress 		character varying DEFAULT NULL::character varying,
@@ -37,7 +39,7 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(
 LANGUAGE 'plpgsql'
 /*
 	Param's explaination: 
-		SourceName	: SabaPlus_ + API Name --SabaPlus_PlaceBet
+		Action	: API Name --PlaceBet
 		ProviderTicketStatus: ticket status from Provider -- API BetResultCheck and VoidGame may have this value --now is attribute status
 		refno		: output ID from S1 to Saba+
 */
@@ -48,23 +50,23 @@ AS $BODY$
 BEGIN
 
 ---- get TicketStatus from API
-	IF SourceName IN ( 'SabaPlus_VoidGame', 'SabaPlus_BetResultCheck') THEN
+	IF Action IN ( 'VoidGame', 'BetResultCheck') THEN
 		SELECT ProviderTicketStatus INTO TicketStatus;
 
 		/* --check API VoidGame dplicate request duplicate
-			IF EXISTS SELECT TOP 1 1 FROM dbo.Bettrans_SabaPlus_Settle WHERE ticketNo = TicketNo THEN 
+			IF EXISTS SELECT TOP 1 1 FROM dbo.Bettrans_Settle WHERE ticketNo = TicketNo THEN 
                 StatusCode := '101';
 				ErrMsg := 'Duplicate Transaction';
                 RETURN;
             END IF;
 		*/
-	ELSIF SourceName = 'SabaPlus_Bonus' THEN
+	ELSIF Action = 'Bonus' THEN
 		SELECT 'WON' INTO TicketStatus;
 	
-	ELSIF SourceName = 'SabaPlus_PlaceBet' THEN
+	ELSIF Action = 'PlaceBet' THEN
 		SELECT 'running' INTO TicketStatus;	
 	
-	ELSEIF SourceName IN ('SabaPlus_EndGame', 'SabaPlus_PlaceBetAndSettle', 'SabaPlus_FreeSpin') THEN
+	ELSEIF Action IN ('EndGame', 'PlaceBetAndSettle', 'FreeSpin') THEN
 		SELECT CASE WHEN payout = 0 THEN 'Lose' 
 					WHEN payout = actualstake THEN 'Draw'
 					WHEN payout > 0 THEN 'Won'
@@ -84,15 +86,15 @@ BEGIN
 			END
 	INTO TicketStatusId;
 
-	IF SourceName IN ('SabaPlus_EndGame', 'SabaPlus_VoidGame', 'BetResultCheck') THEN
+	IF Action IN ('EndGame', 'VoidGame', 'BetResultCheck') THEN
 		INSERT INTO dbo.Bettrans_SabaPlus_Settle 
-		(	 Seq			
-			,OperatorCustId	
+		(	OperatorCustId	
 			,TicketNo	
-			,Bettype		
+			,ExternalGameId		
 			,SettleDate		
 			,GameRoundId	
-			,GameId			
+			,GameId		
+			,GameProviderCode
 			,TransactionId	
 			,Stake		
 			,ActualStake	
@@ -105,18 +107,18 @@ BEGIN
 			,PrizeName			
 			,CreateTime		
 			,UpdateTime	
-			,SourceName --- 'SabaPlus_' + API Name
+			,Action --- '' + API Name
 			,TicketStatus
 			,TicketStatusId
 		)
 		VALUES
-		(	 Seq			
-			,OperatorCustId	
+		(	OperatorCustId	
 			,TicketNo	
-			,Bettype		
+			,ExternalGameId		
 			,SettleDate		
 			,GameRoundId	
-			,GameId				
+			,GameId	
+			,GameProviderCode
 			,TransactionId	
 			,Stake			
 			,ActualStake	
@@ -129,19 +131,19 @@ BEGIN
 			,PrizeName	
 			,CURRENT_TIMESTAMP	
 			,CURRENT_TIMESTAMP 
-			,SourceName --- 'SabaPlus_' + API Name
+			,Action --- '' + API Name
 			,TicketStatus
 			,TicketStatusId
 		);
 
-	ELSIF SourceName IN ( 'SabaPlus_PlaceBet', 'SabaPlus_PlaceBetAndSettle', 'SabaPlus_FreeSpin', 'SabaPlus_Bonus' ) THEN
+	ELSIF Action IN ( 'PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus' ) THEN
 		INSERT INTO dbo.bettrans_SabaPlus_Bet 
-		(	Seq
-			,OperatorCustId	
+		(	OperatorCustId	
 			,GameType		
-			,Bettype		
+			,ExternalGameId		
 			,GameRoundId	
-			,GameId			
+			,GameId
+			,GameProviderCode
 			,IpAddress		
 			,TransDate
 			,SettleDate
@@ -161,17 +163,17 @@ BEGIN
 			,ExtraInfo	
 			,CreateTime		
 			,UpdateTime
-			,SourceName --- 'SabaPlus_' + API Name
+			,Action --- '' + API Name
 			,TicketStatus
 			,TicketStatusId
 		)
 		VALUES
-		(	Seq
-			,OperatorCustId	
+		(	OperatorCustId	
 			,GameType		
-			,Bettype		
+			,ExternalGameId		
 			,GameRoundId	
-			,GameId			
+			,GameId	
+			,GameProviderCode
 			,IpAddress		
 			,TransDate
 			,SettleDate
@@ -191,7 +193,7 @@ BEGIN
 			,ExtraInfo		
 			,CURRENT_TIMESTAMP	
 			,CURRENT_TIMESTAMP
-			,SourceName
+			,Action
 			,TicketStatus
 			,TicketStatusId
 		);
@@ -211,7 +213,7 @@ END;
 $BODY$;
 
 -----------------------------------------------------------------------------
-ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying,character varying, bigint, character varying, text)
+ALTER PROCEDURE dbo.bet_bettrans_bet_insert(character varying, character varying, character varying, character varying, character varying, character varying, integer, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying,character varying, bigint, character varying, text)
     OWNER TO postgres;
 
 
@@ -219,15 +221,16 @@ ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(character varying, characte
 ----Place bet
 --- select * from dbo.players limit 10
 	
-	CALL dbo.bet_bettrans_sabaplus_bet_insert(
+	CALL dbo.bet_bettrans_bet_insert(
 		seq => 'NGBF2390-AE14-435F-BD14-0D513ED25890'
 		,operatorcustid => '4uo0gcqkvze1'
 		,ticketno	=> '12345654324'	
-		,SourceName	=> 'SabaPlus_PlaceBet'
+		,Action	=> 'PlaceBet'
 		,gametype	=>'MaxGame'	
-		,bettype	=> 5401 	
+		,ExternalGameId	=> 5401 	
 		,gameroundid =>'1234567'	
 		,gameid		=>'5300014'	
+		,GameProviderCode => 'MAXPLAY'
 		,ipaddress	=>''	
 		,transdate	=> '2024-09-06 15:00:22+00'	
 		,transactionid  =>'6dd529awqf71'
@@ -240,16 +243,16 @@ ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(character varying, characte
 	)
 	
 	select * from dbo.bettrans_SabaPlus_Bet  where seq =  '3781D88A-9180-443F-B405-E660878D0770'
-	----truncate table  dbo.bettrans_SabaPlus_Bet RESTART IDENTITY
+	----truncate table  dbo.bettrans_Bet RESTART IDENTITY
 
 ----EndGame
-	CALL dbo.bet_bettrans_sabaplus_bet_insert(
+	CALL dbo.bet_bettrans_bet_insert(
 		seq 			=> 'bF3B7850-F49A-41BD-A2FE-EA62BD7DDACC'
 		,operatorcustid =>'4uo0gcqkvze1'
 		,ticketno		=>'12345654323'	
-		,SourceName		=> 'SabaPlus_EndGame'
+		,Action		=> 'EndGame'
 		,gametype	=>'MaxGame'	
-		,bettype	=> 5401 
+		,ExternalGameId	=> 5401 
 		,gameroundid =>'1234567'	
 		,gameid		=>'5300014'		
 		,settledate	=> '2024-09-07 10:02:22+00'	
@@ -263,17 +266,17 @@ ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(character varying, characte
 		,statuscode => ''
 		,errmsg 	=> ''
 	)
-	select * from dbo.bettrans_SabaPlus_Settle   
-	----truncate table  dbo.bettrans_SabaPlus_Settle
+	select * from dbo.bettrans_Settle   
+	----truncate table  dbo.bettrans_Settle
 	
 ----Place bet and Settle /FreeSpin/ Bonus
-	CALL dbo.bet_bettrans_sabaplus_bet_insert(
+	CALL dbo.bet_bettrans_bet_insert(
 		seq => '18A74C4F-C96A-4678-948B-AC3955632E52'
 		,operatorcustid =>'4uo0gcqkvze1'
 		,ticketno	=> '12345654325'	
-		,SourceName		=> 'SabaPlus_PlaceBetAndSettle'
+		,Action		=> 'PlaceBetAndSettle'
 		,gametype	=>'SlotGame'	
-		,bettype	=> 1011 	
+		,ExternalGameId	=> 1011 	
 		,gameid		=>'200006'	
 		,ipaddress	=>''	
 		,transdate	=> '2024-09-07 10:00:22+00'	
@@ -288,25 +291,24 @@ ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert(character varying, characte
 		,statuscode => ''
 		,errmsg 	=> ''
 	)
-	select * from dbo.bettrans_SabaPlus_Bet   
-	----truncate table  dbo.bettrans_SabaPlus_Bet RESTART IDENTITY
+	select * from dbo.bettrans_Bet   
+	----truncate table  dbo.bettrans_Bet RESTART IDENTITY
 	
 ----VoidGame
-	CALL dbo.bet_bettrans_sabaplus_bet_insert(
+	CALL dbo.bet_bettrans_bet_insert(
 		seq => 'hj98s34j-h4gh-4jh1-23ee'
 		,operatorcustid =>'4uo0gcqkvze1'
 		,ticketno	=> '12345654324'	
-		,SourceName		=> 'SabaPlus_VoidGame'
+		,Action		=> 'VoidGame'
 		,gametype	=>'SlotGame'	
 		,gameid		=>'200006'
 		,GameRoundId=>'5402_29835804'
 		,ipaddress	=>''	
 		,transactionid  =>'4678gfqf71'
 		,ProviderTicketStatus = 'Reject'
-		,refno		=>null	
 		,statuscode => ''
 		,errmsg 	=> ''
 	)
 	
-	select * from dbo.bettrans_sabaplus_bet where seq = 'hj98s34j-h4gh-4jh1-23ee'
-	----truncate table  dbo.bettrans_sabaplus_bet
+	select * from dbo.bettrans_bet where seq = 'hj98s34j-h4gh-4jh1-23ee'
+	----truncate table  dbo.bettrans_bet
