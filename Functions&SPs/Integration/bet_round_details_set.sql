@@ -1,8 +1,8 @@
--- PROCEDURE: bet.bet_round_details_set(uuid, text)
+-- PROCEDURE: bet.bet_round_details_set_sabasw(uuid, text)
 
--- DROP PROCEDURE IF EXISTS bet.bet_round_details_set(uuid, text);
+-- DROP PROCEDURE IF EXISTS bet.bet_round_details_set_sabasw(uuid, text);
 
-CREATE OR REPLACE PROCEDURE bet.bet_round_details_set(
+CREATE OR REPLACE PROCEDURE bet.bet_round_details_set_sabasw(
 	IN p_id uuid,
 	IN p_data text,
 	INOUT statuscode character varying DEFAULT '0',
@@ -22,5 +22,5 @@ BEGIN
     END IF;
 END;
 $BODY$;
-ALTER PROCEDURE bet.bet_round_details_set(uuid, text)
+ALTER PROCEDURE bet.bet_round_details_set_sabasw(uuid, text)
     OWNER TO postgres;

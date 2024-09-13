@@ -1,8 +1,8 @@
--- PROCEDURE: bet.bet_rounds_set(uuid, character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, character varying, text)
+-- PROCEDURE: bet.bet_rounds_set_sabasw(uuid, character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, character varying, text)
 
--- DROP PROCEDURE IF EXISTS bet.bet_rounds_set(uuid, character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, character varying, text);
+-- DROP PROCEDURE IF EXISTS bet.bet_rounds_set_sabasw(uuid, character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, character varying, text);
 
-CREATE OR REPLACE PROCEDURE bet.bet_rounds_set(
+CREATE OR REPLACE PROCEDURE bet.bet_rounds_set_sabasw(
 	IN external_round_id character varying DEFAULT NULL::character varying,
 	IN game_provider_id uuid DEFAULT NULL::uuid,
 	IN player_code text DEFAULT NULL::text,
@@ -37,10 +37,10 @@ BEGIN
 		IF EXISTS (
 			SELECT 1 
 			FROM bet.rounds br 
-			WHERE br.external_created_on = bet_rounds_set.external_created_on
-				AND br.external_round_id = bet_rounds_set.external_round_id
-				AND br.game_provider_id = bet_rounds_set.game_provider_id
-				AND br.game_id = bet_rounds_set.game_id
+			WHERE br.external_created_on = bet_rounds_set_sabasw.external_created_on
+				AND br.external_round_id = bet_rounds_set_sabasw.external_round_id
+				AND br.game_provider_id = bet_rounds_set_sabasw.game_provider_id
+				AND br.game_id = bet_rounds_set_sabasw.game_id
 		) 
 		THEN 
 			statuscode := '101';
@@ -50,7 +50,7 @@ BEGIN
 			SELECT b.betamount, b.betamount, b.bettype
 			INTO p_bet_amount, p_valid_bet_amount, p_bet_type
 			FROM dbo.bettrans_sbsw_bet b
-			WHERE b.licenseeTxid = bet_rounds_set.licenseeTxid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
+			WHERE b.licenseeTxid = bet_rounds_set_sabasw.licenseeTxid AND CAST(b.txid AS character varying) = bet_rounds_set_sabasw.external_round_id;
 			
 			INSERT INTO bet.rounds (
 			id,
@@ -114,9 +114,9 @@ BEGIN
 	ELSIF actiontype = 'Settle' THEN 
 		IF NOT EXISTS (SELECT 1 
 						FROM bet.rounds br 
-						WHERE br.external_round_id = bet_rounds_set.external_round_id 
-							AND br.brand_id = bet_rounds_set.brand_id
-							AND br.game_id = bet_rounds_set.game_id
+						WHERE br.external_round_id = bet_rounds_set_sabasw.external_round_id 
+							AND br.brand_id = bet_rounds_set_sabasw.brand_id
+							AND br.game_id = bet_rounds_set_sabasw.game_id
 							AND br.status = 1) 
 		THEN
 			statuscode := '102';
@@ -131,39 +131,39 @@ BEGIN
 			SELECT b.betamount, b.actualamount
 			INTO p_bet_amount, p_actual_bet_amount
 			FROM dbo.Bettrans_SBSW_Bet b
-			WHERE b.refid = bet_rounds_set.refid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
+			WHERE b.refid = bet_rounds_set_sabasw.refid AND CAST(b.txid AS character varying) = bet_rounds_set_sabasw.external_round_id;
 			
 			UPDATE bet.rounds br
 			SET status = 2,
 				closed_on = current_timestamp,
 				updated_on = current_timestamp,
-				external_closed_on = bet_rounds_set.external_closed_on,
+				external_closed_on = bet_rounds_set_sabasw.external_closed_on,
 				valid_bet_amount = CASE 
-										WHEN bet_rounds_set.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
+										WHEN bet_rounds_set_sabasw.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
 										ELSE p_bet_amount
 									END,
-				settle_amount = bet_rounds_set.payout,
+				settle_amount = bet_rounds_set_sabasw.payout,
 				turnover = CASE 
-								WHEN bet_rounds_set.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
+								WHEN bet_rounds_set_sabasw.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
 								ELSE p_bet_amount
 							END,
-				win_loss = bet_rounds_set.payout - p_actual_bet_amount,
+				win_loss = bet_rounds_set_sabasw.payout - p_actual_bet_amount,
 				client_status = CASE 
-									WHEN bet_rounds_set.status IN ('void', 'reject', 'refund') THEN 2
-									WHEN bet_rounds_set.status IN ('won', 'half won') THEN 3
-									WHEN bet_rounds_set.status IN ('lose', 'half lose') THEN 4
-									WHEN bet_rounds_set.status IN ('draw') THEN 5
+									WHEN bet_rounds_set_sabasw.status IN ('void', 'reject', 'refund') THEN 2
+									WHEN bet_rounds_set_sabasw.status IN ('won', 'half won') THEN 3
+									WHEN bet_rounds_set_sabasw.status IN ('lose', 'half lose') THEN 4
+									WHEN bet_rounds_set_sabasw.status IN ('draw') THEN 5
 									ELSE br.client_status END
-			WHERE br.external_round_id = bet_rounds_set.external_round_id 
-				AND br.brand_id = bet_rounds_set.brand_id
-				AND br.game_id = bet_rounds_set.game_id;
+			WHERE br.external_round_id = bet_rounds_set_sabasw.external_round_id 
+				AND br.brand_id = bet_rounds_set_sabasw.brand_id
+				AND br.game_id = bet_rounds_set_sabasw.game_id;
 		END IF;
 	ELSIF actiontype = 'Resettle' THEN 
 		IF NOT EXISTS (SELECT 1 
 						FROM bet.rounds br 
-						WHERE br.external_round_id = bet_rounds_set.external_round_id 
-							AND br.brand_id = bet_rounds_set.brand_id
-							AND br.game_id = bet_rounds_set.game_id 
+						WHERE br.external_round_id = bet_rounds_set_sabasw.external_round_id 
+							AND br.brand_id = bet_rounds_set_sabasw.brand_id
+							AND br.game_id = bet_rounds_set_sabasw.game_id 
 							AND br.status = 2) 
 		THEN
 			statuscode := '102';
@@ -174,17 +174,17 @@ BEGIN
 					WHEN COALESCE(extrastatus, '') = '' OR extrastatus ilike 'void cashout' THEN false ELSE true 
 				END,
 				CASE 
-					WHEN bet_rounds_set.status IN ('void', 'reject', 'refund') THEN 2
-					WHEN bet_rounds_set.status IN ('won', 'half won') THEN 3
-					WHEN bet_rounds_set.status IN ('lose', 'half lose') THEN 4
-					WHEN bet_rounds_set.status IN ('draw') THEN 5
+					WHEN bet_rounds_set_sabasw.status IN ('void', 'reject', 'refund') THEN 2
+					WHEN bet_rounds_set_sabasw.status IN ('won', 'half won') THEN 3
+					WHEN bet_rounds_set_sabasw.status IN ('lose', 'half lose') THEN 4
+					WHEN bet_rounds_set_sabasw.status IN ('draw') THEN 5
 				END
 			INTO p_is_cash_out, p_client_status;
 		
 			SELECT b.betamount, b.actualamount
 			INTO p_bet_amount, p_actual_bet_amount
 			FROM dbo.Bettrans_SBSW_Bet b
-			WHERE b.refid = bet_rounds_set.refid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
+			WHERE b.refid = bet_rounds_set_sabasw.refid AND CAST(b.txid AS character varying) = bet_rounds_set_sabasw.external_round_id;
 			
 			UPDATE bet.rounds br
 			SET status = CASE 
@@ -192,43 +192,43 @@ BEGIN
 							ELSE 2
 						END,
 				updated_on = current_timestamp,
-				external_closed_on = bet_rounds_set.external_closed_on,
+				external_closed_on = bet_rounds_set_sabasw.external_closed_on,
 				valid_bet_amount = CASE 
 										WHEN isOnlyWinlostDateChanged = true THEN br.valid_bet_amount
-										WHEN bet_rounds_set.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
+										WHEN bet_rounds_set_sabasw.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
 										ELSE p_bet_amount
 									END,
 				settle_amount = CASE 
 									WHEN isOnlyWinlostDateChanged = true THEN br.settle_amount
-									ELSE bet_rounds_set.payout
+									ELSE bet_rounds_set_sabasw.payout
 								END,
 				turnover = CASE 
 								WHEN isOnlyWinlostDateChanged = true THEN br.turnover
-								WHEN bet_rounds_set.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
+								WHEN bet_rounds_set_sabasw.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
 								ELSE p_bet_amount
 							END,
 				win_loss = CASE 
 								WHEN isOnlyWinlostDateChanged = true THEN br.win_loss
-								ELSE bet_rounds_set.payout - p_actual_bet_amount
+								ELSE bet_rounds_set_sabasw.payout - p_actual_bet_amount
 							END,
 				client_status = CASE 
 									WHEN isOnlyWinlostDateChanged = true THEN br.client_status
-									WHEN bet_rounds_set.status IN ('void', 'reject', 'refund') THEN 2
-									WHEN bet_rounds_set.status IN ('won', 'half won') THEN 3
-									WHEN bet_rounds_set.status IN ('lose', 'half lose') THEN 4
-									WHEN bet_rounds_set.status IN ('draw') THEN 5
+									WHEN bet_rounds_set_sabasw.status IN ('void', 'reject', 'refund') THEN 2
+									WHEN bet_rounds_set_sabasw.status IN ('won', 'half won') THEN 3
+									WHEN bet_rounds_set_sabasw.status IN ('lose', 'half lose') THEN 4
+									WHEN bet_rounds_set_sabasw.status IN ('draw') THEN 5
 									ELSE br.client_status 
 								END
-			WHERE br.external_round_id = bet_rounds_set.external_round_id 
-				AND br.brand_id = bet_rounds_set.brand_id
-				AND br.game_id = bet_rounds_set.game_id;
+			WHERE br.external_round_id = bet_rounds_set_sabasw.external_round_id 
+				AND br.brand_id = bet_rounds_set_sabasw.brand_id
+				AND br.game_id = bet_rounds_set_sabasw.game_id;
 		END IF;
 	ELSIF actiontype = 'Unsettle' THEN 
 		IF NOT EXISTS (SELECT 1 
 						FROM bet.rounds br 
-						WHERE br.external_round_id = bet_rounds_set.external_round_id 
-							AND br.brand_id = bet_rounds_set.brand_id
-							AND br.game_id = bet_rounds_set.game_id 
+						WHERE br.external_round_id = bet_rounds_set_sabasw.external_round_id 
+							AND br.brand_id = bet_rounds_set_sabasw.brand_id
+							AND br.game_id = bet_rounds_set_sabasw.game_id 
 							AND br.status = 2) 
 		THEN
 			statuscode := '102';
@@ -243,25 +243,25 @@ BEGIN
 			SELECT b.betamount, b.actualamount
 			INTO p_bet_amount, p_actual_bet_amount
 			FROM dbo.Bettrans_SBSW_Bet b
-			WHERE b.refid = bet_rounds_set.refid AND CAST(b.txid AS character varying) = bet_rounds_set.external_round_id;
+			WHERE b.refid = bet_rounds_set_sabasw.refid AND CAST(b.txid AS character varying) = bet_rounds_set_sabasw.external_round_id;
 			
 			UPDATE bet.rounds br
 			SET status = 1,
 				updated_on = current_timestamp,
 				valid_bet_amount = CASE 
-										WHEN bet_rounds_set.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
+										WHEN bet_rounds_set_sabasw.status IN ('void', 'reject', 'refund') OR p_is_cash_out = true THEN 0
 										ELSE p_bet_amount
 									END,
 				settle_amount = 0,
 				turnover = 0,
 				win_loss = 0,
 				client_status = 1
-			WHERE br.external_round_id = bet_rounds_set.external_round_id 
-				AND br.brand_id = bet_rounds_set.brand_id
-				AND br.game_id = bet_rounds_set.game_id;
+			WHERE br.external_round_id = bet_rounds_set_sabasw.external_round_id 
+				AND br.brand_id = bet_rounds_set_sabasw.brand_id
+				AND br.game_id = bet_rounds_set_sabasw.game_id;
 		END IF;
 	END IF;
 END;
 $BODY$;
-ALTER PROCEDURE bet.bet_rounds_set(uuid, character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, character varying, text)
+ALTER PROCEDURE bet.bet_rounds_set_sabasw(uuid, character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, character varying, text)
     OWNER TO postgres;

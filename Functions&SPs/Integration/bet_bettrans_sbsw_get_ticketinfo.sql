@@ -1,8 +1,8 @@
--- PROCEDURE: dbo.bet_bettrans_sbsw_get_ticketinfo(character varying, character varying, character varying, numeric, numeric)
+-- PROCEDURE: dbo.bet_bettrans_sbsw_get_ticketinfo_sabasw(character varying, character varying, character varying, numeric, numeric)
 
--- DROP PROCEDURE IF EXISTS dbo.bet_bettrans_sbsw_get_ticketinfo(character varying, character varying, character varying, numeric, numeric);
+-- DROP PROCEDURE IF EXISTS dbo.bet_bettrans_sbsw_get_ticketinfo_sabasw(character varying, character varying, character varying, numeric, numeric);
 
-CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_get_ticketinfo(
+CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_get_ticketinfo_sabasw(
 	IN userid character varying DEFAULT NULL::character varying,
 	IN refid character varying DEFAULT NULL::character varying,
 	INOUT ticketstatus character varying DEFAULT NULL::character varying,

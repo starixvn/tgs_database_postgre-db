@@ -1,8 +1,8 @@
--- PROCEDURE: dbo.bet_bettrans_sbsw_settle(character varying, character varying, character varying, character varying, bigint, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, character varying, integer, integer, integer)
+-- PROCEDURE: dbo.bet_bettrans_sbsw_settle_sabasw(character varying, character varying, character varying, character varying, bigint, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, character varying, integer, integer, integer)
 
--- DROP PROCEDURE IF EXISTS dbo.bet_bettrans_sbsw_settle(character varying, character varying, character varying, character varying, bigint, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, character varying, integer, integer, integer);
+-- DROP PROCEDURE IF EXISTS dbo.bet_bettrans_sbsw_settle_sabasw(character varying, character varying, character varying, character varying, bigint, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, character varying, integer, integer, integer);
 
-CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_settle(
+CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_settle_sabasw(
 	IN action character varying DEFAULT NULL::character varying,
 	IN operationid character varying DEFAULT NULL::character varying,
 	IN userid character varying DEFAULT NULL::character varying,
@@ -28,7 +28,7 @@ BEGIN
 		SELECT SBSW.SQ
 		INTO _sq
 		FROM dbo.Bettrans_SBSW_Settle AS SBSW 
-		WHERE  SBSW.refId = bet_bettrans_sbsw_settle.refId AND SBSW.operationId = bet_bettrans_sbsw_settle.operationId;
+		WHERE  SBSW.refId = bet_bettrans_sbsw_settle_sabasw.refId AND SBSW.operationId = bet_bettrans_sbsw_settle_sabasw.operationId;
 	
 		IF _sq IS NOT NULL THEN --已完成此交易
 			StatusCode := '101';
