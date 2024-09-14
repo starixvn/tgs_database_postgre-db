@@ -22,6 +22,7 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_confirmbet(
 	)
 LANGUAGE 'plpgsql'
 AS $BODY$
+	DECLARE _rc integer := 0;
 BEGIN    
     IF NOT EXISTS (SELECT 1 FROM dbo.Bettrans_SBSW_Bet b WHERE b.SQ = bet_bettrans_sbsw_confirmbet.licenseeTxId AND b.refId = bet_bettrans_sbsw_confirmbet.refId)
 	THEN 
@@ -29,34 +30,28 @@ BEGIN
 		errmsg := 'No Data';
 		RETURN;
 	ELSE
-		IF bet_bettrans_sbsw_confirmbet.action IN ('ConfirmBet', 'ConfirmBetParlay') THEN
-			UPDATE dbo.Bettrans_SBSW_Bet
-			SET
-				action = bet_bettrans_sbsw_confirmbet.action,
-				operationId = bet_bettrans_sbsw_confirmbet.operationId,
-				updateTime = bet_bettrans_sbsw_confirmbet.updateTime,
-				transactionTime = bet_bettrans_sbsw_confirmbet.transactionTime,
-				txId = bet_bettrans_sbsw_confirmbet.txId,
-				licenseeTxId = bet_bettrans_sbsw_confirmbet.licenseeTxId,
-				odds = bet_bettrans_sbsw_confirmbet.odds,
-				oddsType = bet_bettrans_sbsw_confirmbet.oddsType,
-				actualAmount = bet_bettrans_sbsw_confirmbet.actualAmount,
-				AdjustAmount = bet_bettrans_sbsw_confirmbet.creditAmount - bet_bettrans_sbsw_confirmbet.debitAmount,
-				isOddsChanged = bet_bettrans_sbsw_confirmbet.isOddsChanged,
-				winlostDate = bet_bettrans_sbsw_confirmbet.winlostDate
-			WHERE Bettrans_SBSW_Bet.SQ = bet_bettrans_sbsw_confirmbet.licenseeTxId AND Bettrans_SBSW_Bet.refId = bet_bettrans_sbsw_confirmbet.refId;
-		ELSE
-			UPDATE dbo.Bettrans_SBSW_Bet
-			SET
-				action = bet_bettrans_sbsw_confirmbet.action,
-				operationId = bet_bettrans_sbsw_confirmbet.operationId,
-				updateTime = bet_bettrans_sbsw_confirmbet.updateTime,
-				transactionTime = bet_bettrans_sbsw_confirmbet.transactionTime,
-				txId = bet_bettrans_sbsw_confirmbet.txId,
-				licenseeTxId = bet_bettrans_sbsw_confirmbet.licenseeTxId,
-				AdjustAmount = bet_bettrans_sbsw_confirmbet.creditAmount - bet_bettrans_sbsw_confirmbet.debitAmount,
-				winlostDate = bet_bettrans_sbsw_confirmbet.winlostDate
-			WHERE Bettrans_SBSW_Bet.SQ = bet_bettrans_sbsw_confirmbet.licenseeTxId AND Bettrans_SBSW_Bet.refId = bet_bettrans_sbsw_confirmbet.refId;
+		UPDATE dbo.Bettrans_SBSW_Bet
+		SET
+			action = bet_bettrans_sbsw_confirmbet.action,
+			operationId = bet_bettrans_sbsw_confirmbet.operationId,
+			updateTime = bet_bettrans_sbsw_confirmbet.updateTime,
+			transactionTime = bet_bettrans_sbsw_confirmbet.transactionTime,
+			txId = bet_bettrans_sbsw_confirmbet.txId,
+			licenseeTxId = bet_bettrans_sbsw_confirmbet.licenseeTxId,
+			odds = bet_bettrans_sbsw_confirmbet.odds,
+			oddsType = bet_bettrans_sbsw_confirmbet.oddsType,
+			actualAmount = bet_bettrans_sbsw_confirmbet.actualAmount,
+			AdjustAmount = bet_bettrans_sbsw_confirmbet.creditAmount - bet_bettrans_sbsw_confirmbet.debitAmount,
+			isOddsChanged = bet_bettrans_sbsw_confirmbet.isOddsChanged,
+			winlostDate = bet_bettrans_sbsw_confirmbet.winlostDate
+		WHERE Bettrans_SBSW_Bet.SQ = bet_bettrans_sbsw_confirmbet.licenseeTxId 
+			AND Bettrans_SBSW_Bet.refId = bet_bettrans_sbsw_confirmbet.refId
+			AND Bettrans_SBSW_Bet.operationid <> bet_bettrans_sbsw_confirmbet.operationid;
+			
+		GET DIAGNOSTICS _rc = ROW_COUNT;
+		IF _rc = 0 THEN 
+			statuscode := 101;
+			errmsg := 'Duplicate Transaction';
 		END IF;
 	END IF;
 END ; 

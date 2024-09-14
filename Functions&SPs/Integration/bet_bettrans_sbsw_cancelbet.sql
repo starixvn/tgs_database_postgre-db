@@ -10,6 +10,7 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sbsw_cancelbet(
 LANGUAGE 'plpgsql'
 AS $BODY$
 	DECLARE _sq bigint:= null;
+			_rc integer:= 0;
 BEGIN   
 	IF NOT EXISTS (SELECT 1 FROM dbo.Bettrans_SBSW_Bet b WHERE b.refId = bet_bettrans_sbsw_cancelbet.refId)
 	THEN 
@@ -29,7 +30,14 @@ BEGIN
 			operationId = bet_bettrans_sbsw_cancelbet.operationId,
 			updateTime = bet_bettrans_sbsw_cancelbet.updateTime,
 			AdjustAmount = bet_bettrans_sbsw_cancelbet.creditAmount - bet_bettrans_sbsw_cancelbet.debitAmount
-		WHERE SQ = _sq;
+		WHERE Bettrans_SBSW_Bet.SQ = _sq
+			AND Bettrans_SBSW_Bet.operationid <> bet_bettrans_sbsw_cancelbet.operationid;
+			
+		GET DIAGNOSTICS _rc = ROW_COUNT;
+		IF _rc = 0 THEN 
+			statuscode := '101';
+			errmsg := 'Duplicate Transaction';
+		END IF;
 	END IF;
 END ;
 $BODY$;
