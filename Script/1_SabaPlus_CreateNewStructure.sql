@@ -16,18 +16,19 @@ CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SabaPlus_Bet_sq_seq
     MINVALUE 1
     MAXVALUE 9223372036854775807
     CACHE 1;
-
+	
 ALTER SEQUENCE dbo.bettrans_SabaPlus_Bet_sq_seq
     OWNER TO postgres;
 	
 CREATE TABLE dbo.bettrans_SabaPlus_Bet 
 (
 	 SQ					bigint NOT NULL DEFAULT  nextval('dbo.bettrans_SabaPlus_Bet_sq_seq'::regclass)
+	,Seq				character varying(64)	NOT NULL
 	,OperatorCustId		character varying(32)	NOT NULL
 	,GameType			character varying(50)	NOT NULL
-	,ExternalGameId		integer									
+	,ExternalGameId		character varying(50)	NULL									
 	,GameRoundId		character varying(100)
-	,GameId				character varying(50)	NOT NULL
+	,GameId				character varying(50)	NULL
 	,GameProviderCode	character varying(16)	NOT NULL
 	,IpAddress			character varying(25)	
 	,TransDate			timestamp with time zone	NOT NULL	
@@ -51,6 +52,8 @@ CREATE TABLE dbo.bettrans_SabaPlus_Bet
 	,Action				character varying(100)	NOT NULL ---API Name
 	,TicketStatus		character varying(100)	NOT NULL
 	,TicketStatusID		smallint				NOT NULL
+	,GameResult			character varying(2000)
+	,ResultId			character varying(500)
 );
 
 --Primary key
@@ -60,12 +63,12 @@ DROP CONSTRAINT IF EXISTS pk_bettrans_SabaPlus_Bet;
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet
     ADD CONSTRAINT pk_bettrans_SabaPlus_Bet PRIMARY KEY (sq);
 
---Unique key TicketNo
+--Unique key TicketNo, Seq
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet 
-DROP CONSTRAINT IF EXISTS uk_bettrans_SabaPlus_Bet_TicketNo;
+DROP CONSTRAINT IF EXISTS uk_bettrans_SabaPlus_Bet_TicketNo_Seq;
 
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet
-    ADD CONSTRAINT uk_bettrans_SabaPlus_Bet_TicketNo UNIQUE (TicketNo);
+    ADD CONSTRAINT uk_bettrans_SabaPlus_Bet_TicketNo_Seq UNIQUE (TicketNo, Seq);
 
 --grant
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_bet
@@ -91,11 +94,12 @@ ALTER SEQUENCE dbo.bettrans_SabaPlus_Settle_sq_seq
 
 CREATE TABLE dbo.bettrans_SabaPlus_Settle 
 (
-	 SQ				BIGINT					NOT NULL DEFAULT nextval('dbo.bettrans_SabaPlus_Settle_sq_seq'::regclass) 	
+	 SQ				BIGINT					NOT NULL DEFAULT nextval('dbo.bettrans_SabaPlus_Settle_sq_seq'::regclass) 
+	,Seq				character varying(64)	NOT NULL
 	,OperatorCustId	CHARACTER VARYING(32)	NOT NULL			
-	,ExternalGameId	INTEGER					 
+	,ExternalGameId	character varying(50)	NULL
 	,GameRoundId	CHARACTER VARYING(100)
-	,GameId			CHARACTER VARYING(50)		NOT NULL	
+	,GameId			CHARACTER VARYING(50)		NULL	
 	,GameProviderCode	character varying(16)	NOT NULL
 	,SettleDate		TIMESTAMP WITH TIME ZONE
 	,TicketNo		CHARACTER VARYING(200)		NOT NULL
@@ -114,6 +118,8 @@ CREATE TABLE dbo.bettrans_SabaPlus_Settle
 	,Action			CHARACTER VARYING(100)		NOT NULL
 	,TicketStatus	CHARACTER VARYING(100)		NOT NULL
 	,TicketStatusID	SMALLINT					NOT NULL
+	,GameResult			character varying(2000)
+	,ResultId			character varying(500)
 );
 
 --Primary key
@@ -148,6 +154,22 @@ DROP CONSTRAINT IF EXISTS pk_SystemSetting ;
 ALTER TABLE IF EXISTS  dbo.SystemSetting 
     ADD CONSTRAINT pk_SystemSetting PRIMARY KEY (KeyName);
 
+----------------------------------------------------
+--4. TABLE log.DBALog
+----------------------------------------------------
+
+CREATE TABLE dbo.SystemSetting 
+(
+	 ID
+	 ,ObjectsID
+	 ,ObjectsType
+	 ,Action
+	 ,StartTime
+	 ,EndTime
+	 ,
+	 character varying(200) NOT NULL
+	,KeyValue	character varying(500) NOT NULL
+)
 
 
 
