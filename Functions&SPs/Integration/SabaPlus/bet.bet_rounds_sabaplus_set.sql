@@ -28,7 +28,7 @@ LANGUAGE 'plpgsql'
 		external_round_id: dbo.bettrans_sabaplus_bet.TicketNo
 		extrastatus: PlaceBet
 					 EndGame
-		licenseetxid: column sq in table dbo.bettrans_sabaplus_bet.
+		licenseetxid: column sq in table dbo.bettrans_sabaplus_bet
 		actiontype:	ConfirmBet
 					Settle
 
@@ -49,7 +49,7 @@ AS $BODY$
 			p_win_loss		numeric(18,6);
 BEGIN
 
-		SELECT 1  , CASE WHEN br.client_status = 1 THEN 1 ELSE 0 END  INTO p_is_existing  ,  p_is_raise_bet::BIT
+		SELECT 1 , CASE WHEN br.client_status = 1 THEN 1 ELSE 0 END  INTO p_is_existing,  p_is_raise_bet::BIT
 		FROM bet.Rounds br	
 		WHERE br.external_round_id =  bet_rounds_sabaplus_set.external_round_id 
 			AND br.brand_id = bet_rounds_sabaplus_set.brand_id
@@ -160,7 +160,6 @@ BEGIN
 						AND br.brand_id = bet_rounds_sabaplus_set.brand_id
 						AND br.game_id = bet_rounds_sabaplus_set.game_id;		
 		END IF;
-
 
 END;
 $BODY$;

@@ -1,10 +1,8 @@
 /*
-	Louisa: insert data into dbo.Bettrans_Bet
+	Louisa: insert data into dbo.Bettrans_sabaplus_Bet/Settle
 	2024-09-05
 */
  
--- DROP PROCEDURE IF EXISTS dbo.bet_bettrans_sabaplus_bet(character varying, character varying, character varying, character varying, character varying, character varying, character varying, character varying, character varying, timestamp with time zone, timestamp with time zone, character varying, numeric, numeric, numeric, numeric, numeric, character varying, character varying, character varying, character varying, character varying, character varying, character varying, character varying, character varying, character varying, bigint, character varying, text);
-
 CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sabaplus_bet (
 	IN seq				character varying,
 	IN operatorcustid	character varying,
@@ -33,54 +31,45 @@ CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sabaplus_bet (
 	IN providerticketstatus character varying DEFAULT NULL::character varying,
 	IN gameresult		character varying DEFAULT NULL::character varying,
 	IN resultId			character varying DEFAULT NULL::character varying,
-	
+	IN gameid			integer DEFAULT 0,
+
 	INOUT refno			bigint DEFAULT 0,
 	INOUT statuscode	character varying DEFAULT '0'::character varying,
-	INOUT errmsg		text DEFAULT ''::text)
+	INOUT errmsg		text DEFAULT ''::text,
+
+	INOUT Louisaahihi	text DEFAULT ''::text
+	)
 LANGUAGE 'plpgsql'
 /*
 	Param's explaination: 
-		TicketStatusId: 0-Running		 
-						1-Won			 
-						2-Lose 		 
-						3-Draw 		 
-						4-Void		 
-						5-Reject		 
-						6-Refund 
+		TicketStatusId from Saba+: 0-Running		 
+									1-Won			 
+									2-Lose 		 
+									3-Draw 		 
+									4-Void		 
+									5-Reject		 
+									6-Refund
+		action: API Name (PlaceBet, EndGame, PlaceBetAndSettle...)
 */
 AS $BODY$
 	DECLARE TicketStatus 	character varying(100) := 'running';
-			TicketStatusId	smallint;
-			GameId			Character varying(50);
-			MinRefNo		bigint;
-			IsRaiseBet		bit := 0; 
 			
 BEGIN
-
-	SELECT MIN(Sq) INTO MinRefNo
-	FROM dbo.bettrans_SabaPlus_Bet b 
-	WHERE b.Action		=  bet_bettrans_sabaplus_bet.Action
-		AND b.TicketNo	= bet_bettrans_sabaplus_bet.TicketNo
-		AND b.GameType	= bet_bettrans_sabaplus_bet.GameType
-		AND bet_bettrans_sabaplus_bet.Action  = 'PlaceBet'
-	GROUP BY b.TicketNo;
-
-	IF MinRefNo IS NOT NULL AND MinRefNo > 0 THEN 
-		IsRaiseBet = 1::BIT;
-	END IF;
 
 ---- get TicketStatus from API
 	IF Action IN ( 'VoidGame', 'BetResultCheck') THEN
 		SELECT ProviderTicketStatus INTO TicketStatus;
+	END IF;
 
-		/* --check API VoidGame dplicate request duplicate
-			IF EXISTS SELECT TOP 1 1 FROM dbo.Bettrans_Settle WHERE ticketNo = TicketNo THEN 
-                StatusCode := '101';
-				ErrMsg := 'Duplicate Transaction';
-                RETURN;
-            END IF;
-		*/
-	ELSIF Action = 'Bonus' THEN
+---- check API VoidGame dplicate request duplicate
+	IF EXISTS ( SELECT 1 FROM dbo.bettrans_sabaplus_settle s WHERE s.ticketNo = bet_bettrans_sabaplus_bet.ticketno AND s.Action = 'VoidGame') THEN
+        StatusCode := '101';
+		ErrMsg := 'Duplicate Transaction';
+        
+		RETURN;
+    END IF;
+
+	IF Action = 'Bonus' THEN
 		SELECT 'WON' INTO TicketStatus;
 	
 	ELSIF Action = 'PlaceBet' THEN
@@ -94,20 +83,8 @@ BEGIN
 				END INTO TicketStatus;
 	END IF;
 
-----Set TicketStatusID base on TicketStatus
-	SELECT CASE WHEN TicketStatus =  'running'  THEN 0
-				WHEN TicketStatus =	 'Won'		THEN 1
-				WHEN TicketStatus =	 'Lose'		THEN 2
-				WHEN TicketStatus =	 'Draw'		THEN 3
-				WHEN TicketStatus =	 'Void'		THEN 4
-				WHEN TicketStatus =	 'Reject'	THEN 5
-				WHEN TicketStatus =	 'Refund' 	THEN 6
-				ELSE NULL 
-			END
-	INTO TicketStatusId;
-
 IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
-	INSERT INTO dbo.bettrans_SabaPlus_Bet 
+	INSERT INTO dbo.bettrans_sabaplus_bet 
 		(	OperatorCustId	
 			,GameType		
 			,ExternalGameId		
@@ -133,9 +110,8 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,ExtraInfo	
 			,CreateTime		
 			,UpdateTime
-			,Action --- '' + API Name
+			,Action ---   API Name
 			,TicketStatus
-			,TicketStatusId
 			,Seq
 		)
 		VALUES 
@@ -166,7 +142,6 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,CURRENT_TIMESTAMP
 			,Action
 			,TicketStatus
-			,TicketStatusId
 			,Seq
 		);
 	END IF;
@@ -194,7 +169,6 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,UpdateTime	
 			,Action --- '' + API Name
 			,TicketStatus
-			,TicketStatusId
 			,Seq
 		)
 		VALUES
@@ -217,14 +191,13 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,PrizeName	
 			,CURRENT_TIMESTAMP	
 			,CURRENT_TIMESTAMP 
-			,Action --- '' + API Name
+			,Action ---   API Name
 			,TicketStatus
-			,TicketStatusId
 			,Seq
 		);
 	END IF;
 
-	SELECT CASE WHEN IsRaiseBet = 1::BIT THEN MinRefNo ELSE LASTVAL() END INTO Refno;---OUTPUT inserted ID to API
+	SELECT LASTVAL() INTO Refno;---OUTPUT inserted ID to API
 		
 	EXCEPTION 
 		WHEN unique_violation THEN 

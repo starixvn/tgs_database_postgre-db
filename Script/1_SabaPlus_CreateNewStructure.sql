@@ -28,7 +28,7 @@ CREATE TABLE dbo.bettrans_SabaPlus_Bet
 	,GameType			character varying(50)	NOT NULL
 	,ExternalGameId		character varying(50)	NULL									
 	,GameRoundId		character varying(100)
-	,GameId				character varying(50)	NULL
+	,GameId				integer					NULL
 	,GameProviderCode	character varying(16)	NOT NULL
 	,IpAddress			character varying(25)	
 	,TransDate			timestamp with time zone	NOT NULL	
@@ -51,7 +51,6 @@ CREATE TABLE dbo.bettrans_SabaPlus_Bet
 	,ExtraInfo			character varying(500)		
 	,Action				character varying(100)	NOT NULL ---API Name
 	,TicketStatus		character varying(100)	NOT NULL
-	,TicketStatusID		smallint				NOT NULL
 	,GameResult			character varying(2000)
 	,ResultId			character varying(500)
 );
@@ -99,7 +98,7 @@ CREATE TABLE dbo.bettrans_SabaPlus_Settle
 	,OperatorCustId	CHARACTER VARYING(32)	NOT NULL			
 	,ExternalGameId	character varying(50)	NULL
 	,GameRoundId	CHARACTER VARYING(100)
-	,GameId			CHARACTER VARYING(50)		NULL	
+	,GameId			INT						NULL	
 	,GameProviderCode	character varying(16)	NOT NULL
 	,SettleDate		TIMESTAMP WITH TIME ZONE
 	,TicketNo		CHARACTER VARYING(200)		NOT NULL
@@ -117,7 +116,6 @@ CREATE TABLE dbo.bettrans_SabaPlus_Settle
 	,UpdateTime		TIMESTAMP WITH TIME ZONE	NOT NULL
 	,Action			CHARACTER VARYING(100)		NOT NULL
 	,TicketStatus	CHARACTER VARYING(100)		NOT NULL
-	,TicketStatusID	SMALLINT					NOT NULL
 	,GameResult			character varying(2000)
 	,ResultId			character varying(500)
 );
