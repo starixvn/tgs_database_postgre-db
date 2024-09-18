@@ -3,42 +3,38 @@
 	2024-09-05
 */
  
-CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sabaplus_bet (
-	IN seq				character varying,
-	IN operatorcustid	character varying,
-	IN ticketno			character varying,
-	IN action			character varying,
+CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sabaplus_bet(
+	IN seq character varying,
+	IN operatorcustid character varying,
+	IN ticketno character varying,
+	IN action character varying,
 	IN gameprovidercode character varying,
-	IN gametype			character varying DEFAULT NULL::character varying,
-	IN externalgameid	character varying DEFAULT NULL::character varying,
-	IN gameroundid		character varying DEFAULT NULL::character varying,
-	IN ipaddress		character varying DEFAULT NULL::character varying,
-	IN transdate		timestamp with time zone DEFAULT NULL::timestamp with time zone,
-	IN settledate		timestamp with time zone DEFAULT NULL::timestamp with time zone,
-	IN transactionid	character varying DEFAULT NULL::character varying,
-	IN stake			numeric DEFAULT 0.0,
-	IN actualstake		numeric DEFAULT 0.0,
-	IN netstake			numeric DEFAULT 0.0,
-	IN payout			numeric DEFAULT 0.0,
-	IN odds				numeric DEFAULT 0.0,
-	IN betchoice		character varying DEFAULT NULL::character varying,
-	IN tablecode		character varying DEFAULT NULL::character varying,
-	IN currencyiso		character varying DEFAULT NULL::character varying,
-	IN extrainfo		character varying DEFAULT NULL::character varying,
-	IN bonusid			character varying DEFAULT '0'::character varying,
-	IN bonusname		character varying DEFAULT NULL::character varying,
-	IN prizename		character varying DEFAULT NULL::character varying,
+	IN gametype character varying DEFAULT NULL::character varying,
+	IN externalgameid character varying DEFAULT NULL::character varying,
+	IN gameroundid character varying DEFAULT NULL::character varying,
+	IN ipaddress character varying DEFAULT NULL::character varying,
+	IN transdate timestamp with time zone DEFAULT NULL::timestamp with time zone,
+	IN settledate timestamp with time zone DEFAULT NULL::timestamp with time zone,
+	IN transactionid character varying DEFAULT NULL::character varying,
+	IN stake numeric DEFAULT 0.0,
+	IN actualstake numeric DEFAULT 0.0,
+	IN netstake numeric DEFAULT 0.0,
+	IN payout numeric DEFAULT 0.0,
+	IN odds numeric DEFAULT 0.0,
+	IN betchoice character varying DEFAULT NULL::character varying,
+	IN tablecode character varying DEFAULT NULL::character varying,
+	IN currencyiso character varying DEFAULT NULL::character varying,
+	IN extrainfo character varying DEFAULT NULL::character varying,
+	IN bonusid character varying DEFAULT '0'::character varying,
+	IN bonusname character varying DEFAULT NULL::character varying,
+	IN prizename character varying DEFAULT NULL::character varying,
 	IN providerticketstatus character varying DEFAULT NULL::character varying,
-	IN gameresult		character varying DEFAULT NULL::character varying,
-	IN resultId			character varying DEFAULT NULL::character varying,
-	IN gameid			integer DEFAULT 0,
-
-	INOUT refno			bigint DEFAULT 0,
-	INOUT statuscode	character varying DEFAULT '0'::character varying,
-	INOUT errmsg		text DEFAULT ''::text,
-
-	INOUT Louisaahihi	text DEFAULT ''::text
-	)
+	IN gameresult character varying DEFAULT NULL::character varying,
+	IN resultid character varying DEFAULT NULL::character varying,
+	IN gameproviderid uuid DEFAULT NULL::uuid,
+	INOUT refno bigint DEFAULT 0,
+	INOUT statuscode character varying DEFAULT '0'::character varying,
+	INOUT errmsg text DEFAULT ''::text)
 LANGUAGE 'plpgsql'
 /*
 	Param's explaination: 
@@ -53,6 +49,7 @@ LANGUAGE 'plpgsql'
 */
 AS $BODY$
 	DECLARE TicketStatus 	character varying(100) := 'running';
+			_gameid	int;
 			
 BEGIN
 
@@ -61,8 +58,12 @@ BEGIN
 		SELECT ProviderTicketStatus INTO TicketStatus;
 	END IF;
 
+	SELECT g.id into _gameid::int  FROM dbo.Games g 
+	WHERE g.external_id = bet_bettrans_sabaplus_bet.externalgameid 
+		AND  g.game_provider_id = bet_bettrans_sabaplus_bet.gameproviderid;
+	
 ---- check API VoidGame dplicate request duplicate
-	IF EXISTS ( SELECT 1 FROM dbo.bettrans_sabaplus_settle s WHERE s.ticketNo = bet_bettrans_sabaplus_bet.ticketno AND s.Action = 'VoidGame') THEN
+	IF EXISTS ( SELECT 1 FROM dbo.Bettrans_sabaplus_Settle s WHERE s.ticketNo = bet_bettrans_sabaplus_bet.ticketno AND s.Action = 'VoidGame') THEN
         StatusCode := '101';
 		ErrMsg := 'Duplicate Transaction';
         
@@ -119,7 +120,7 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,GameType		
 			,ExternalGameId		
 			,GameRoundId	
-			,GameId	
+			,_gameid	
 			,GameProviderCode
 			,IpAddress		
 			,TransDate
@@ -146,7 +147,9 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 		);
 	END IF;
 
-	IF Action  !~  'PlaceBet' THEN
+	SELECT LASTVAL() INTO Refno;---OUTPUT inserted ID to API
+		
+	IF Action  <>  'PlaceBet' THEN
 		INSERT INTO dbo.Bettrans_SabaPlus_Settle 
 		(	OperatorCustId	
 			,TicketNo	
@@ -177,7 +180,7 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,ExternalGameId		
 			,SettleDate		
 			,GameRoundId	
-			,GameId	
+			,_gameid	
 			,GameProviderCode
 			,TransactionId	
 			,Stake			
@@ -196,8 +199,6 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,Seq
 		);
 	END IF;
-
-	SELECT LASTVAL() INTO Refno;---OUTPUT inserted ID to API
 		
 	EXCEPTION 
 		WHEN unique_violation THEN 
@@ -209,41 +210,7 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
         		errmsg     = message_text;
 
 END;
-$BODY$;
-
-ALTER PROCEDURE dbo.bet_bettrans_sabaplus_bet
-( character varying
-,character varying
-,character varying
-,character varying
-,character varying
-,character varying  
-,character varying  
-,character varying  
-,character varying  
-,timestamp with time zone  
-,timestamp with time zone  
-,character varying  
-,numeric 
-,numeric 
-,numeric 
-,numeric 
-,numeric 
-,character varying 
-,character varying 
-,character varying 
-,character varying 
-,character varying 
-,character varying 
-,character varying 
-,character varying  
-,character varying  
-,character varying  
-,bigint
-,character varying 
-,text 
-) OWNER TO postgres;
-
+$BODY$; 
  
 --------- SAMPLE ------------------------------------------------------------
 ----Place bet 

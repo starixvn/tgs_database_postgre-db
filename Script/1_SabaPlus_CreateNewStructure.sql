@@ -46,8 +46,8 @@ CREATE TABLE dbo.bettrans_SabaPlus_Bet
 	,BonusId			character varying(100)
 	,BonusName			character varying(500)	
 	,PrizeName			character varying(500)	
-	,CreateTime			timestamp with time zone NOT NULL
-	,UpdateTime			timestamp with time zone NOT NULL
+	,CreateTime			timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP	
+	,UpdateTime			timestamp with time zone NOT NULL DEFAULT CURRENT_TIMESTAMP	
 	,ExtraInfo			character varying(500)		
 	,Action				character varying(100)	NOT NULL ---API Name
 	,TicketStatus		character varying(100)	NOT NULL

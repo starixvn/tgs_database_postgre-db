@@ -1,27 +1,27 @@
- 
+
+-- DROP PROCEDURE IF EXISTS bet.bet_rounds_sabaplus_set(character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, uuid, character varying, text);
 
 CREATE OR REPLACE PROCEDURE bet.bet_rounds_sabaplus_set(
-	IN external_round_id				character varying	DEFAULT NULL::character varying
-	,IN game_provider_id				uuid				DEFAULT NULL::uuid
-	,IN player_code						text				DEFAULT NULL::text
-	,IN game_id							integer				DEFAULT NULL::integer
-	,IN currency_code					character varying	DEFAULT NULL::character varying
-	,IN status							character varying	DEFAULT NULL::character varying
-	,IN game_provider_configuration_id	uuid				DEFAULT NULL::uuid
-	,IN licenseetxid					bigint				DEFAULT NULL::bigint
-	,IN wallet_id						uuid				DEFAULT NULL::uuid
-	,IN refid							character varying	DEFAULT NULL::character varying
-	,IN brand_id						uuid				DEFAULT NULL::uuid
-	,IN external_created_on				timestamp with time zone DEFAULT NULL::timestamp with time zone
-	,IN external_closed_on				timestamp with time zone DEFAULT NULL::timestamp with time zone
-	,IN payout							numeric DEFAULT 0
-	,IN extrastatus						character varying	DEFAULT NULL::character varying
-	,IN isonlywinlostdatechanged		boolean				DEFAULT NULL::boolean
-	,IN actiontype						character varying	DEFAULT NULL::character varying
-	,INOUT id							uuid				DEFAULT gen_random_uuid()
-	,INOUT statuscode					character varying	DEFAULT '0'::character varying
-	,INOUT errmsg						text				DEFAULT ''::text
-	)
+	IN external_round_id character varying DEFAULT NULL::character varying,
+	IN game_provider_id uuid DEFAULT NULL::uuid,
+	IN player_code text DEFAULT NULL::text,
+	IN game_id integer DEFAULT NULL::integer,
+	IN currency_code character varying DEFAULT NULL::character varying,
+	IN status character varying DEFAULT NULL::character varying,
+	IN game_provider_configuration_id uuid DEFAULT NULL::uuid,
+	IN licenseetxid bigint DEFAULT NULL::bigint,
+	IN wallet_id uuid DEFAULT NULL::uuid,
+	IN refid character varying DEFAULT NULL::character varying,
+	IN brand_id uuid DEFAULT NULL::uuid,
+	IN external_created_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
+	IN external_closed_on timestamp with time zone DEFAULT NULL::timestamp with time zone,
+	IN payout numeric DEFAULT 0,
+	IN extrastatus character varying DEFAULT NULL::character varying,
+	IN isonlywinlostdatechanged boolean DEFAULT NULL::boolean,
+	IN actiontype character varying DEFAULT NULL::character varying,
+	INOUT id uuid DEFAULT gen_random_uuid(),
+	INOUT statuscode character varying DEFAULT '0'::character varying,
+	INOUT errmsg text DEFAULT ''::text)
 LANGUAGE 'plpgsql'
 /*
 	Param's explaination: 
@@ -49,43 +49,74 @@ AS $BODY$
 			p_win_loss		numeric(18,6);
 BEGIN
 
-		SELECT 1 , CASE WHEN br.client_status = 1 THEN 1 ELSE 0 END  INTO p_is_existing,  p_is_raise_bet::BIT
+		SELECT 1  
+			, CASE WHEN br.client_status = 1 THEN 1 ELSE 0 END  
+		INTO p_is_existing  
+			, p_is_raise_bet::BIT
 		FROM bet.Rounds br	
 		WHERE br.external_round_id =  bet_rounds_sabaplus_set.external_round_id 
 			AND br.brand_id = bet_rounds_sabaplus_set.brand_id
 			AND br.game_id = bet_rounds_sabaplus_set.game_id;				
 
-		IF  p_is_existing = 0::BIT AND (extrastatus LIKE '%EndGame%' OR extrastatus LIKE '%VoidGame%') THEN
+		IF COALESCE(p_is_existing,0::BIT) = 0::BIT AND (extrastatus ILIKE  '%EndGame%' OR extrastatus ILIKE '%VoidGame%') THEN
 			statuscode := '102';
 			errmsg := 'No Data';
 			RETURN;
 		END IF;
 
-		SELECT b.Stake 	
-			,b.ExternalGameID::integer 
-			,CASE WHEN TicketStatus IN ('void','reject','refund') THEN 0
-					ELSE  CASE WHEN b.NetStake = 0 THEN b.Stake ELSE  b.NetStake END 
-					END 
-			,CASE b.TicketStatus WHEN 'running'	THEN 1
-								WHEN 'void'		THEN 2
-								WHEN 'refund'	THEN 3
-								WHEN 'reject'	THEN 4
-								WHEN 'lose'		THEN 5
-								WHEN 'won'		THEN 6
-								WHEN 'draw'		THEN 7
-								ELSE NULL ---bug or unknow case =))
-								END  
-			,CASE WHEN b.TicketStatus = 'running' THEN 1 ELSE 2 END  
-			,CASE WHEN b.ticketstatus = 'running' THEN NULL ELSE external_closed_on END  
-			,CASE WHEN b.ticketstatus = 'running' THEN NULL ELSE current_timestamp END 
-			,CASE WHEN b.ticketstatus = 'running' THEN 0 ELSE bet_rounds_sabaplus_set.payout END 
-			,CASE WHEN b.ticketstatus IN ('void','reject','refund','running' ) THEN 0 ELSE b.stake END		
-			,bet_rounds_sabaplus_set.payout - CASE WHEN b.NetStake = 0 THEN b.ActualStake ELSE b.NetStake END 
-			INTO p_bet_amount ,  p_bet_type , p_valid_bet_amount ,  p_client_status, p_status, p_external_closed_on, p_closed_on, p_turnover, p_win_loss
-		FROM dbo.bettrans_sabaplus_bet b
-		WHERE b.sq = licenseetxid;
+		IF bet_rounds_sabaplus_set.extrastatus NOT LIKE '%PlaceBet%' THEN
+			SELECT b.Stake 	
+				,b.ExternalGameID::integer 
+				,CASE WHEN LOWER(TicketStatus) IN ('void','reject','refund') THEN 0
+						ELSE  CASE WHEN b.NetStake = 0 THEN b.Stake ELSE  b.NetStake END 
+						END 
+				,CASE LOWER(b.TicketStatus) WHEN 'running'	THEN 1
+									WHEN 'void'		THEN 2
+									WHEN 'refund'	THEN 3
+									WHEN 'reject'	THEN 4
+									WHEN 'lose'		THEN 5
+									WHEN 'won'		THEN 6
+									WHEN 'draw'		THEN 7
+									ELSE NULL ---bug or unknow case =))
+									END  
+				,CASE WHEN LOWER(b.TicketStatus) = 'running' THEN 1 ELSE 2 END  
+				,CASE WHEN LOWER(b.ticketstatus) = 'running' THEN NULL ELSE external_closed_on END  
+				,CASE WHEN LOWER(b.ticketstatus) = 'running' THEN NULL ELSE current_timestamp END 
+				,CASE WHEN LOWER(b.ticketstatus) = 'running' THEN 0 ELSE bet_rounds_sabaplus_set.payout END 
+				,CASE WHEN LOWER(b.ticketstatus) IN ('void','reject','refund','running' ) THEN 0 ELSE b.stake END		
+				,bet_rounds_sabaplus_set.payout - CASE WHEN b.NetStake = 0 THEN b.ActualStake ELSE b.NetStake END 
+				,bet_rounds_sabaplus_set.payout
+				INTO p_bet_amount ,  p_bet_type , p_valid_bet_amount ,  p_client_status, p_status, p_external_closed_on, p_closed_on, p_turnover, p_win_loss, p_settle_amount
+			FROM dbo.bettrans_sabaplus_settle b
+			WHERE b.TicketNo = bet_rounds_sabaplus_set.external_round_id ;
+		ELSE
+			SELECT b.Stake 	
+				,b.ExternalGameID::integer 
+				,CASE WHEN LOWER(TicketStatus) IN ('void','reject','refund') THEN 0
+						ELSE  CASE WHEN b.NetStake = 0 THEN b.Stake ELSE  b.NetStake END 
+						END 
+				,CASE LOWER(b.TicketStatus) WHEN 'running'	THEN 1
+									WHEN 'void'		THEN 2
+									WHEN 'refund'	THEN 3
+									WHEN 'reject'	THEN 4
+									WHEN 'lose'		THEN 5
+									WHEN 'won'		THEN 6
+									WHEN 'draw'		THEN 7
+									ELSE NULL ---bug or unknow case =))
+									END  
+				,CASE WHEN LOWER(b.TicketStatus) = 'running' THEN 1 ELSE 2 END  
+				,CASE WHEN LOWER(b.ticketstatus) = 'running' THEN NULL ELSE external_closed_on END  
+				,CASE WHEN LOWER(b.ticketstatus) = 'running' THEN NULL ELSE current_timestamp END 
+				,CASE WHEN LOWER(b.ticketstatus) = 'running' THEN 0 ELSE bet_rounds_sabaplus_set.payout END 
+				,CASE WHEN LOWER(b.ticketstatus) IN ('void','reject','refund','running' ) THEN 0 ELSE b.stake END		
+				,bet_rounds_sabaplus_set.payout - CASE WHEN b.NetStake = 0 THEN b.ActualStake ELSE b.NetStake END 
+				INTO p_bet_amount ,  p_bet_type , p_valid_bet_amount ,  p_client_status, p_status, p_external_closed_on, p_closed_on, p_turnover, p_win_loss
+			FROM dbo.bettrans_sabaplus_settle b
+			WHERE b.sq = licenseetxid 
+				AND Action = 'PlaceBet' ;
+		END IF;
 
-		IF p_is_existing = 0::BIT THEN
+		IF COALESCE(p_is_existing,0::BIT) = 0::BIT THEN
 			INSERT INTO bet.Rounds
 			(	 id,
 				created_on,
@@ -141,8 +172,8 @@ BEGIN
 				p_client_status,
 				NULL,							--reopen_turnover_adjustment
 				NULL,							--reopened_on
-				NULL							--effective_betting_percentage		
-				
+				NULL,							--effective_betting_percentage		
+				p_bet_type
 			);
 		ELSE
 			UPDATE bet.rounds br
@@ -161,8 +192,21 @@ BEGIN
 						AND br.game_id = bet_rounds_sabaplus_set.game_id;		
 		END IF;
 
+		EXCEPTION 
+		WHEN unique_violation THEN 
+			SELECT  'duplicate ticket' INTO errmsg;
+			SELECT '101' INTO statuscode;
+		WHEN Others THEN
+			 get stacked diagnostics
+        		statuscode   = returned_sqlstate,
+        		errmsg     = message_text;
+
+
 END;
 $BODY$;
+ALTER PROCEDURE bet.bet_rounds_sabaplus_set(character varying, uuid, text, integer, character varying, character varying, uuid, bigint, uuid, character varying, uuid, timestamp with time zone, timestamp with time zone, numeric, character varying, boolean, character varying, uuid, character varying, text)
+    OWNER TO postgres;
+
 
 
 /*
