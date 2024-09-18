@@ -49,7 +49,7 @@ LANGUAGE 'plpgsql'
 */
 AS $BODY$
 	DECLARE TicketStatus 	character varying(100) := 'running';
-			_gameid	int;
+			--_gameid	int;
 			
 BEGIN
 
@@ -58,9 +58,9 @@ BEGIN
 		SELECT ProviderTicketStatus INTO TicketStatus;
 	END IF;
 
-	SELECT g.id into _gameid::int  FROM dbo.Games g 
-	WHERE g.external_id = bet_bettrans_sabaplus_bet.externalgameid 
-		AND  g.game_provider_id = bet_bettrans_sabaplus_bet.gameproviderid;
+	--SELECT g.id into _gameid::int  FROM dbo.Games g 
+	--WHERE g.external_id = bet_bettrans_sabaplus_bet.externalgameid 
+	--	AND  g.game_provider_id = bet_bettrans_sabaplus_bet.gameproviderid;
 	
 ---- check API VoidGame dplicate request duplicate
 	IF EXISTS ( SELECT 1 FROM dbo.Bettrans_sabaplus_Settle s WHERE s.ticketNo = bet_bettrans_sabaplus_bet.ticketno AND s.Action = 'VoidGame') THEN
@@ -120,7 +120,7 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,GameType		
 			,ExternalGameId		
 			,GameRoundId	
-			,_gameid	
+			,0 -- _gameid	
 			,GameProviderCode
 			,IpAddress		
 			,TransDate
@@ -180,7 +180,7 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,ExternalGameId		
 			,SettleDate		
 			,GameRoundId	
-			,_gameid	
+			,0 --- _gameid	
 			,GameProviderCode
 			,TransactionId	
 			,Stake			
@@ -199,7 +199,11 @@ IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 			,Seq
 		);
 	END IF;
-		
+	
+	IF  Action  IN ( 'EndGame', 'BetResultCheck', 'VoidGame') THEN
+		SELECT LASTVAL() INTO Refno;
+	END IF;
+
 	EXCEPTION 
 		WHEN unique_violation THEN 
 			SELECT  'duplicate ticket' INTO errmsg;
