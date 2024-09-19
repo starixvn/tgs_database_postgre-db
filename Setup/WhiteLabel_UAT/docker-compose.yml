@@ -1,0 +1,17 @@
+services:
+ postgres_db:
+    image: postgresql-extend:1.0
+    container_name: postgresql-extend-container
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234aa
+    volumes:
+      - postgres_db-data:/var/lib/postgresql/data
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf
+    command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
+    ports:
+      - '5433:5432'
+volumes:
+  postgres_db-data:
+    driver: local
