@@ -1,0 +1,77 @@
+#Step 01: Create roles
+CREATE ROLE tgs_app WITH
+  LOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS
+  CONNECTION LIMIT 1000
+  password '1234aa';
+  
+CREATE ROLE tgs_devops WITH
+  LOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS
+  CONNECTION LIMIT 1000
+  password '1234aa';
+  
+CREATE ROLE tgs_migration WITH
+  LOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS
+  CONNECTION LIMIT 1000
+  password '1234aa';
+  
+CREATE ROLE tgs_app WITH
+  LOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS
+  CONNECTION LIMIT 1000
+  password '1234aa';
+  
+CREATE ROLE tgs_reader WITH
+  LOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS
+  CONNECTION LIMIT 1000
+  password '1234aa';
+  
+CREATE ROLE tgsstagingsuprtadmin WITH
+  LOGIN
+  NOSUPERUSER
+  INHERIT
+  NOCREATEDB
+  NOCREATEROLE
+  NOREPLICATION
+  NOBYPASSRLS
+  CONNECTION LIMIT 1000
+  password '1234aa';
+  
+#Step 02: Backup tgs_staging db schema only (at 2024-09-19 14:05:37)
+#Ran on [DBM21] 10.18.200.163
+sudo pg_dump -h 10.10.50.121 -p 30603 -U postgres --schema-only tgs_staging > /var/lib/postgresql/backup/tgs_bk_schema.sql
+#=> input pwd for postgres user: 2f07obifmf
+ 
+#Step 03: Restore tgs_staging db schema only (from 2024-09-19 14:05:37 bk file)
+sudo psql -h 10.18.200.164 -p 5433 -U postgres tgs_staging -f /var/lib/postgresql/backup/tgs_bk_schema.sql
+#=> input pwd for postgres user: 1234aa
+
+#Step 04: Remove unused/test objects:
