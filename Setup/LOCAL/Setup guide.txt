@@ -75,3 +75,76 @@ sudo psql -h 10.18.200.164 -p 5433 -U postgres tgs_staging -f /var/lib/postgresq
 #=> input pwd for postgres user: 1234aa
 
 #Step 04: Remove unused/test objects:
+drop table partman.template_bet_game_actions;
+drop table partman.template_bet_rounds;
+drop table partman.template_dbo_game_bet_firsts;
+drop table partman.template_dbo_game_bets;
+drop table partman.template_dbo_game_wager_stat_closes;
+drop table partman.template_dbo_game_wager_stat_hourly_closes;
+drop table partman.template_dbo_game_wager_stat_hourly_zone_closes;
+drop table bet.rounds_deleted;
+drop table dbo.game_bets_deleted;
+drop table dbo.game_providers_louisa;
+drop function bet.game_action_get_valid_game_action_external_ids_old;
+DROP FUNCTION dbo.cashservice_exchange_wallet_function_test(
+	INOUT transactionid character varying,
+	walletid character varying,
+	playercode character varying,
+	transactiontype integer,
+	amount numeric,
+	lockamount numeric,
+	description character varying,
+	externalid character varying,
+	createdbyuserid character varying,
+	isallownegative boolean ,
+	providercode character varying ,
+	operationid character varying ,
+	action character varying ,
+	INOUT balance numeric,
+	INOUT lockedbalance numeric ,
+	INOUT errorcode character varying );
+DROP FUNCTION dbo.cashservice_exchange_wallet_function_test(
+	walletid character varying,
+	playercode character varying);	
+DROP FUNCTION dbo.luke_test;
+DROP PROCEDURE bet.bet_round_details_set_xtest;
+DROP PROCEDURE bet.bet_rounds_sabaplus_set_xtest;
+DROP PROCEDURE bet.bet_rounds_set_sabasw;
+DROP PROCEDURE bet.bet_rounds_set_xtest;
+DROP PROCEDURE bet.bet_rounds_set;
+DROP PROCEDURE dbo._bet_bettrans_sbsw_get_ticketinfo_bet_bettrans_sbsw_get_ticketi;
+DROP PROCEDURE dbo.bet_bettrans_sabaplus_bet_insert_240914;
+DROP PROCEDURE dbo.bet_bettrans_sabaplus_bet_v1;
+DROP PROCEDURE dbo.bet_bettrans_sabaplus_bet_v3;
+DROP PROCEDURE dbo.bet_bettrans_sbsw_bet_xtest;
+
+DROP PROCEDURE dbo.louisa_test(
+	IN action character varying,
+	IN operationid character varying,
+	IN txns text,
+	IN extrainfo text,
+	OUT test text);
+
+DO $$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN 
+	SELECT specific_schema AS schema_name,
+			routine_name AS procedure_name
+	FROM information_schema.routines
+	WHERE routine_type = 'PROCEDURE'
+		AND specific_schema NOT IN ('pg_catalog', 'information_schema')
+		AND (
+			routine_name ILIKE '%xtest%' 
+			OR routine_name ILIKE '%xpre%' 
+			OR routine_name ILIKE '%louisa%' 
+			OR routine_name ILIKE '%dominic%' 
+			OR routine_name ILIKE '%luke%'
+		)
+	LOOP
+		RAISE NOTICE 'DROPPING PROCEDURE: %.%', r.schema_name, r.procedure_name;
+        EXECUTE format('DROP PROCEDURE %I.%I;', r.schema_name, r.procedure_name);
+    END LOOP;
+END $$;
+
