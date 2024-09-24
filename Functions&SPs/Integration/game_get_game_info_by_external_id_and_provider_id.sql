@@ -39,7 +39,9 @@ BEGIN
         dbo.games as g
     WHERE
         g.external_id = $1
-        AND g.game_provider_id = $2;
+        AND g.game_provider_id = $2
+		order by g.external_id desc
+		limit 1;
 
 END;
 $BODY$;
