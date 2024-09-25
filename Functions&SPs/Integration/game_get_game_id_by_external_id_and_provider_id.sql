@@ -18,10 +18,10 @@ BEGIN
     FROM
         dbo.games as g
     WHERE
-        g.external_id = $1
+        g.external_id in ('0', $1)
         AND g.game_provider_id = $2
-		order by g.external_id desc
-		limit 1;
+		Order By g.external_id desc
+		Limit 1;
     RETURN GameId;
 END;
 $BODY$;
