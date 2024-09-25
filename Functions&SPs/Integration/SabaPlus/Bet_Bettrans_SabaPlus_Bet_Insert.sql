@@ -4,36 +4,38 @@
 */
  
 CREATE OR REPLACE PROCEDURE dbo.bet_bettrans_sabaplus_bet(
-	IN seq character varying,
-	IN operatorcustid character varying,
-	IN ticketno character varying,
-	IN action character varying,
+	IN seq				character varying,
+	IN operatorcustid	character varying,
+	IN ticketno			character varying,
+	IN action			character varying, --''
 	IN gameprovidercode character varying,
-	IN gametype character varying DEFAULT NULL::character varying,
-	IN externalgameid character varying DEFAULT NULL::character varying,
-	IN gameroundid character varying DEFAULT NULL::character varying,
-	IN ipaddress character varying DEFAULT NULL::character varying,
-	IN transdate timestamp with time zone DEFAULT NULL::timestamp with time zone,
-	IN settledate timestamp with time zone DEFAULT NULL::timestamp with time zone,
-	IN transactionid character varying DEFAULT NULL::character varying,
-	IN stake numeric DEFAULT 0.0,
-	IN actualstake numeric DEFAULT 0.0,
-	IN netstake numeric DEFAULT 0.0,
-	IN payout numeric DEFAULT 0.0,
-	IN odds numeric DEFAULT 0.0,
-	IN betchoice character varying DEFAULT NULL::character varying,
-	IN tablecode character varying DEFAULT NULL::character varying,
-	IN currencyiso character varying DEFAULT NULL::character varying,
-	IN extrainfo character varying DEFAULT NULL::character varying,
-	IN bonusid character varying DEFAULT '0'::character varying,
-	IN bonusname character varying DEFAULT NULL::character varying,
-	IN prizename character varying DEFAULT NULL::character varying,
-	IN providerticketstatus character varying DEFAULT NULL::character varying,
-	IN gameresult character varying DEFAULT NULL::character varying,
-	IN resultid character varying DEFAULT NULL::character varying,
-	IN gameproviderid uuid DEFAULT NULL::uuid,
-	INOUT refno bigint DEFAULT 0,
-	INOUT statuscode character varying DEFAULT '0'::character varying,
+	IN gametype			character varying DEFAULT NULL::character varying,
+	IN externalgameid	character varying DEFAULT NULL::character varying,
+	IN gameroundid		character varying DEFAULT NULL::character varying,
+	IN ipaddress		character varying DEFAULT NULL::character varying,
+	IN transdate		timestamp with time zone DEFAULT NULL::timestamp with time zone,
+	IN settledate		timestamp with time zone DEFAULT NULL::timestamp with time zone,
+	IN transactionid	character varying DEFAULT NULL::character varying,
+	IN stake			numeric DEFAULT 0.0,
+	IN actualstake		numeric DEFAULT 0.0,
+	IN netstake			numeric DEFAULT 0.0,
+	IN payout			numeric DEFAULT 0.0,
+	IN odds				numeric DEFAULT 0.0,
+	IN betchoice		character varying DEFAULT NULL::character varying,
+	IN tablecode		character varying DEFAULT NULL::character varying,
+	IN currencyiso		character varying DEFAULT NULL::character varying,
+	IN extrainfo		character varying DEFAULT NULL::character varying,
+	IN bonusid			character varying DEFAULT '0'::character varying,
+	IN bonusname		character varying DEFAULT NULL::character varying,
+	IN prizename		character varying DEFAULT NULL::character varying,
+	IN providerticketstatus int DEFAULT NULL::int,
+	IN gameresult			character varying DEFAULT NULL::character varying,
+	IN resultid				character varying DEFAULT NULL::character varying,
+	IN gameproviderid		uuid DEFAULT NULL::uuid,
+	IN playercode			character varying DEFAULT NULL::character varying,
+
+	INOUT refno				bigint DEFAULT 0,
+	INOUT statuscode		character varying DEFAULT '0'::character varying,
 	INOUT errmsg text DEFAULT ''::text)
 LANGUAGE 'plpgsql'
 /*
@@ -55,154 +57,111 @@ BEGIN
 
 ---- get TicketStatus from API
 	IF Action IN ( 'VoidGame', 'BetResultCheck') THEN
-		SELECT ProviderTicketStatus INTO TicketStatus;
+		SELECT CASE providerticketstatus WHEN 0 THEN 'running'		 
+										 WHEN 1 THEN 'won'			 
+										 WHEN 2 THEN 'lose' 		 
+										 WHEN 3 THEN 'draw' 		 
+										 WHEN 4 THEN 'void'		 
+										 WHEN 5 THEN 'reject'		 
+										 WHEN 6 THEN 'refund'
+				END
+		INTO TicketStatus;
 	END IF;
 
 	--SELECT g.id into _gameid::int  FROM dbo.Games g 
 	--WHERE g.external_id = bet_bettrans_sabaplus_bet.externalgameid 
 	--	AND  g.game_provider_id = bet_bettrans_sabaplus_bet.gameproviderid;
 	
----- check API VoidGame dplicate request duplicate
-	IF EXISTS ( SELECT 1 FROM dbo.Bettrans_sabaplus_Settle s WHERE s.ticketNo = bet_bettrans_sabaplus_bet.ticketno AND s.Action = 'VoidGame') THEN
+---- check API VoidGame duplicate request duplicate
+	IF EXISTS ( SELECT 1 FROM dbo.bettrans_sabaplus_bet s 
+				WHERE s.ticketNo = bet_bettrans_sabaplus_bet.ticketno 
+				AND s.Action = 'VoidGame'
+			) THEN
         StatusCode := '101';
 		ErrMsg := 'Duplicate Transaction';
         
 		RETURN;
     END IF;
+-------------------------------------------------------
 
 	IF Action = 'Bonus' THEN
-		SELECT 'WON' INTO TicketStatus;
+		SELECT 'won' INTO TicketStatus;
 	
 	ELSIF Action = 'PlaceBet' THEN
 		SELECT 'running' INTO TicketStatus;	
 	
 	ELSEIF Action IN ('EndGame', 'PlaceBetAndSettle', 'FreeSpin') THEN
-		SELECT CASE WHEN payout = 0 THEN 'Lose' 
-					WHEN payout = actualstake THEN 'Draw'
-					WHEN payout > 0 THEN 'Won'
+		SELECT CASE WHEN payout = actualstake THEN 'draw'
+					WHEN payout < actualstake THEN 'lose' 
+					WHEN payout > actualstake THEN 'won'
 					ELSE '' --unknow case or bug;
 				END INTO TicketStatus;
 	END IF;
 
-IF Action IN ('PlaceBet', 'PlaceBetAndSettle', 'FreeSpin', 'Bonus') THEN
 	INSERT INTO dbo.bettrans_sabaplus_bet 
-		(	OperatorCustId	
-			,GameType		
-			,ExternalGameId		
-			,GameRoundId	
-			,GameId
-			,GameProviderCode
-			,IpAddress		
-			,TransDate
-			,SettleDate
-			,TicketNo		
-			,TransactionId	
-			,Stake			
-			,ActualStake 	
-			,NetStake
-			,Payout
-			,Odds			
-			,BetChoice		
-			,TableCode		
-			,CurrencyISO	
-			,BonusId			
-			,BonusName		
-			,PrizeName	
-			,ExtraInfo	
-			,CreateTime		
-			,UpdateTime
-			,Action ---   API Name
-			,TicketStatus
-			,Seq
-		)
-		VALUES 
-		(	OperatorCustId	
-			,GameType		
-			,ExternalGameId		
-			,GameRoundId	
-			,0 -- _gameid	
-			,GameProviderCode
-			,IpAddress		
-			,TransDate
-			,SettleDate
-			,TicketNo		
-			,TransactionId	
-			,Stake			
-			,ActualStake
-			,NetStake
-			,Payout
-			,Odds			
-			,BetChoice		
-			,TableCode	
-			,CurrencyISO
-			,BonusId			
-			,BonusName	
-			,PrizeName		
-			,ExtraInfo		
-			,CURRENT_TIMESTAMP	
-			,CURRENT_TIMESTAMP
-			,Action
-			,TicketStatus
-			,Seq
-		);
-	END IF;
+	(	OperatorCustId	
+		,GameType		
+		,ExternalGameId		
+		,GameRoundId	
+		,GameId
+		,GameProviderCode
+		,IpAddress		
+		,TransDate
+		,SettleDate
+		,TicketNo		
+		,TransactionId	
+		,Stake			
+		,ActualStake 	
+		,NetStake
+		,Payout
+		,Odds			
+		,BetChoice		
+		,TableCode		
+		,CurrencyISO	
+		,BonusId			
+		,BonusName		
+		,PrizeName	
+		,ExtraInfo	
+		,CreateTime		
+		,UpdateTime
+		,Action ---   API Name
+		,TicketStatus
+		,Seq
+		,playercode
+	)
+	VALUES 
+	(	OperatorCustId	
+		,GameType		
+		,ExternalGameId		
+		,GameRoundId	
+		,0 -- _gameid	
+		,GameProviderCode
+		,IpAddress		
+		,TransDate
+		,SettleDate
+		,TicketNo		
+		,TransactionId	
+		,Stake			
+		,ActualStake
+		,NetStake
+		,Payout
+		,Odds			
+		,BetChoice		
+		,TableCode	
+		,CurrencyISO
+		,BonusId			
+		,BonusName	
+		,PrizeName		
+		,ExtraInfo		
+		,CURRENT_TIMESTAMP	
+		,CURRENT_TIMESTAMP
+		,Action
+		,TicketStatus
+		,Seq
+		,playercode
+	);
 
 	SELECT LASTVAL() INTO Refno;---OUTPUT inserted ID to API
-		
-	IF Action  <>  'PlaceBet' THEN
-		INSERT INTO dbo.Bettrans_SabaPlus_Settle 
-		(	OperatorCustId	
-			,TicketNo	
-			,ExternalGameId		
-			,SettleDate		
-			,GameRoundId	
-			,GameId		
-			,GameProviderCode
-			,TransactionId	
-			,Stake		
-			,ActualStake	
-			,NetStake		
-			,Payout			
-			,Odds			
-			,CurrencyISO	
-			,BonusId		
-			,BonusName		
-			,PrizeName			
-			,CreateTime		
-			,UpdateTime	
-			,Action --- '' + API Name
-			,TicketStatus
-			,Seq
-		)
-		VALUES
-		(	OperatorCustId	
-			,TicketNo	
-			,ExternalGameId		
-			,SettleDate		
-			,GameRoundId	
-			,0 --- _gameid	
-			,GameProviderCode
-			,TransactionId	
-			,Stake			
-			,ActualStake	
-			,NetStake		
-			,Payout			
-			,Odds			
-			,CurrencyISO	
-			,BonusId		
-			,BonusName		
-			,PrizeName	
-			,CURRENT_TIMESTAMP	
-			,CURRENT_TIMESTAMP 
-			,Action ---   API Name
-			,TicketStatus
-			,Seq
-		);
-	END IF;
-	
-	IF  Action  IN ( 'EndGame', 'BetResultCheck', 'VoidGame') THEN
-		SELECT LASTVAL() INTO Refno;
-	END IF;
 
 	EXCEPTION 
 		WHEN unique_violation THEN 

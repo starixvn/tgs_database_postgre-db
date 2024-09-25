@@ -20,7 +20,7 @@ CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SabaPlus_Bet_sq_seq
 ALTER SEQUENCE dbo.bettrans_SabaPlus_Bet_sq_seq
     OWNER TO postgres;
 	
-CREATE TABLE dbo.bettrans_SabaPlus_Bet 
+CREATE TABLE dbo.bettrans_sabaplus_bet 
 (
 	 SQ					bigint NOT NULL DEFAULT  nextval('dbo.bettrans_SabaPlus_Bet_sq_seq'::regclass)
 	,Seq				character varying(64)	NOT NULL
@@ -29,14 +29,14 @@ CREATE TABLE dbo.bettrans_SabaPlus_Bet
 	,ExternalGameId		character varying(50)	NULL									
 	,GameRoundId		character varying(100)
 	,GameId				integer					NULL
-	,GameProviderCode	character varying(16)	NOT NULL
+	,GameProviderCode	character varying(16)	NULL
 	,IpAddress			character varying(25)	
-	,TransDate			timestamp with time zone	NOT NULL	
+	,TransDate			timestamp with time zone		
 	,SettleDate			timestamp with time zone
 	,TicketNo			character varying(200)		NOT NULL
 	,TransactionId		character varying(100)	
-	,Stake				numeric(20,6)	NOT NULL DEFAULT 0.0
-	,ActualStake		numeric(20,6)	NOT NULL DEFAULT 0.0
+	,Stake				numeric(20,6)	DEFAULT 0.0
+	,ActualStake		numeric(20,6)	DEFAULT 0.0
 	,NetStake			numeric(20,6)	DEFAULT 0.0	
 	,Payout				numeric(20,6)	DEFAULT 0.0
 	,Odds				numeric(20,2)	NOT NULL 
@@ -53,7 +53,33 @@ CREATE TABLE dbo.bettrans_SabaPlus_Bet
 	,TicketStatus		character varying(100)	NOT NULL
 	,GameResult			character varying(2000)
 	,ResultId			character varying(500)
+	,playercode			character varying(16)
 );
+-----------------------------------------------
+
+-- DROP INDEX IF EXISTS dbo.PK_bettrans_sabaplus_bet_sq;
+CREATE INDEX IF NOT EXISTS PK_bettrans_sabaplus_bet_sq
+    ON dbo.bettrans_sabaplus_bet USING btree
+    (sq ASC NULLS LAST)
+    WITH (deduplicate_items=False)
+    TABLESPACE pg_default;
+
+-- DROP INDEX IF EXISTS dbo.IDX_bettrans_sabaplus_transdate
+CREATE INDEX IDX_bettrans_sabaplus_transdate
+	ON dbo.bettrans_sabaplus_bet USING btree
+	(transdate ASC NULLS LAST)
+	WITH (deduplicate_items=True)
+	TABLESPACE pg_default;
+
+-- DROP INDEX IF EXISTS dbo.IDX_bettrans_sabaplus_bet_ticketno
+CREATE INDEX IDX_bettrans_sabaplus_bet_ticketno
+    ON dbo.bettrans_sabaplus_bet USING btree
+    (ticketno ASC NULLS LAST)
+    WITH (deduplicate_items=True)
+;
+
+----------------------------------------------
+
 
 --Primary key
 ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Bet 
@@ -103,10 +129,10 @@ CREATE TABLE dbo.bettrans_SabaPlus_Settle
 	,SettleDate		TIMESTAMP WITH TIME ZONE
 	,TicketNo		CHARACTER VARYING(200)		NOT NULL
 	,TransactionId	CHARACTER VARYING(100)	
-	,Stake			DECIMAL(20,6)	NOT NULL DEFAULT 0.0
-	,ActualStake	DECIMAL(20,6)	NOT NULL DEFAULT 0.0	
-	,NetStake		DECIMAL(20,6)	NOT NULL DEFAULT 0.0
-	,Payout			DECIMAL(20,6)	NOT NULL DEFAULT 0.0
+	,Stake			DECIMAL(20,6)	 DEFAULT 0.0
+	,ActualStake	DECIMAL(20,6)	DEFAULT 0.0	
+	,NetStake		DECIMAL(20,6)	DEFAULT 0.0
+	,Payout			DECIMAL(20,6)	 DEFAULT 0.0
 	,Odds			DECIMAL(20,2)	NOT NULL	
 	,CurrencyISO	CHARACTER VARYING(10)	
 	,BonusId		CHARACTER VARYING(100)
@@ -156,17 +182,29 @@ ALTER TABLE IF EXISTS  dbo.SystemSetting
 --4. TABLE log.DBALog
 ----------------------------------------------------
 
-CREATE TABLE dbo.SystemSetting 
+CREATE SEQUENCE IF NOT EXISTS log.DBA_Log_sq_seq
+    INCREMENT 1
+    START 1
+    MINVALUE 1
+    MAXVALUE 9223372036854775807
+    CACHE 1;
+
+ALTER SEQUENCE log.DBA_Log_sq_seq
+    OWNER TO postgres;
+
+CREATE TABLE log.DBA_Log 
 (
-	 ID
-	 ,ObjectsID
-	 ,ObjectsType
-	 ,Action
-	 ,StartTime
-	 ,EndTime
-	 ,
-	 character varying(200) NOT NULL
-	,KeyValue	character varying(500) NOT NULL
+	 sq BIGINT NOT NULL DEFAULT nextval('log.DBA_Log_sq_seq'::regclass)
+	 ,sessionid		character varying(200)
+	 ,uid			uuid
+	 ,userid		oid
+	 ,action		character varying(50)
+	 ,object_type	character varying(50)
+	 ,schema		 character varying(50)	 
+	 ,object_name	character varying(200)
+	 ,start_time	timestamp
+	 ,end_time		timestamp
+	 ,text			character varying(1000)
 )
 
 
