@@ -1,15 +1,16 @@
 services:
  postgres:
-    image: postgresql-extend:1.0
-    container_name: postgresql-extend-container
+    image: s1hub.nebula.prod/kbt-db/s1-db/postgresql-uat:v1.0
+    container_name: postgresql-uat-container
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234aa
+      POSTGRES_PASSWORD: VmWr4gf6MXRN
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf
-      - ./postgres/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+      - ./configs/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./configs/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./configs/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
     command: postgres -c 'config_file=/etc/postgresql/postgresql.conf'
     ports:
       - '5433:5432'
