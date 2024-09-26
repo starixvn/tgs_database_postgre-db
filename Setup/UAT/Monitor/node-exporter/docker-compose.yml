@@ -1,0 +1,11 @@
+services:
+  node_exporter:
+    image: s1hub.nebula.prod/kbt-db/docker-hub/prom/node-exporter:v1.8.1
+    container_name: node-exporter
+    command:
+      - '--path.rootfs=/host'
+    network_mode: host
+    pid: host
+    restart: always
+    volumes:
+      - '/:/host:ro,rslave'
