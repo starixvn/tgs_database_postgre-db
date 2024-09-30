@@ -58,7 +58,6 @@ GRANT USAGE ON SCHEMA dbo TO app_reader_writer;
 GRANT USAGE ON SCHEMA backup TO app_reader_writer;
 GRANT USAGE ON SCHEMA bet TO app_reader_writer;
 GRANT USAGE ON SCHEMA log TO app_reader_writer;
-GRANT USAGE ON SCHEMA partman TO app_reader_writer;
 GRANT USAGE ON SCHEMA public TO app_reader_writer;
 GRANT USAGE ON SCHEMA report TO app_reader_writer;
 GRANT USAGE ON SCHEMA information_schema TO app_reader_writer;
@@ -68,7 +67,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA dbo TO app_reader_w
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA backup TO app_reader_writer;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA bet TO app_reader_writer;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA log TO app_reader_writer;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA partman TO app_reader_writer;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO app_reader_writer;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA report TO app_reader_writer;
 GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO app_reader_writer;
@@ -78,7 +76,6 @@ GRANT USAGE ON SCHEMA dbo TO app_reader;
 GRANT USAGE ON SCHEMA backup TO app_reader;
 GRANT USAGE ON SCHEMA bet TO app_reader;
 GRANT USAGE ON SCHEMA log TO app_reader;
-GRANT USAGE ON SCHEMA partman TO app_reader;
 GRANT USAGE ON SCHEMA public TO app_reader;
 GRANT USAGE ON SCHEMA report TO app_reader;
 GRANT USAGE ON SCHEMA information_schema TO app_reader;
@@ -88,7 +85,6 @@ GRANT SELECT ON ALL TABLES IN SCHEMA dbo TO app_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA backup TO app_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA bet TO app_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA log TO app_reader;
-GRANT SELECT ON ALL TABLES IN SCHEMA partman TO app_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO app_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA report TO app_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA information_schema TO app_reader;
@@ -98,7 +94,6 @@ GRANT USAGE ON SCHEMA dbo TO app_bet_service;
 GRANT USAGE ON SCHEMA backup TO app_bet_service;
 GRANT USAGE ON SCHEMA bet TO app_bet_service;
 GRANT USAGE ON SCHEMA log TO app_bet_service;
-GRANT USAGE ON SCHEMA partman TO app_bet_service;
 GRANT USAGE ON SCHEMA public TO app_bet_service;
 GRANT USAGE ON SCHEMA report TO app_bet_service;
 GRANT USAGE ON SCHEMA information_schema TO app_bet_service;
@@ -108,11 +103,45 @@ GRANT USAGE ON SCHEMA dbo TO app_cash_service;
 GRANT USAGE ON SCHEMA backup TO app_cash_service;
 GRANT USAGE ON SCHEMA bet TO app_cash_service;
 GRANT USAGE ON SCHEMA log TO app_cash_service;
-GRANT USAGE ON SCHEMA partman TO app_cash_service;
 GRANT USAGE ON SCHEMA public TO app_cash_service;
 GRANT USAGE ON SCHEMA report TO app_cash_service;
 GRANT USAGE ON SCHEMA information_schema TO app_cash_service;
 GRANT USAGE ON SCHEMA pg_catalog TO app_cash_service;
 
-REVOKE INSERT, DELETE, UPDATE ON dbo.transactions FROM app_reader_writer;
-REVOKE INSERT, DELETE, UPDATE ON dbo.wallets FROM app_reader_writer;
+
+
+-- Revoke permissions on dbo.wallets table
+REVOKE SELECT, INSERT, DELETE, UPDATE ON dbo.wallets FROM app_reader_writer;
+
+-- Revoke permissions on dbo.transactions table
+REVOKE SELECT, INSERT, DELETE, UPDATE ON dbo.transactions FROM app_reader_writer;
+
+-- Revoke permissions on bet.rounds table
+REVOKE SELECT, INSERT, DELETE, UPDATE ON bet.rounds FROM app_reader_writer;
+
+-- Revoke permissions on dbo.Bettrans_SBSW_Bet table
+REVOKE SELECT, INSERT, DELETE, UPDATE ON dbo.Bettrans_SBSW_Bet FROM app_reader_writer;
+
+-- Revoke permissions on dbo.Bettrans_SBSW_Settle table
+REVOKE SELECT, INSERT, DELETE, UPDATE ON dbo.Bettrans_SBSW_Settle FROM app_reader_writer;
+
+-- Revoke permissions on dbo.Bettrans_SabaPlus_Bet table
+REVOKE SELECT, INSERT, DELETE, UPDATE ON dbo.Bettrans_SabaPlus_Bet FROM app_reader_writer;
+
+-- Revoke permissions on dbo.wallets table
+REVOKE SELECT ON dbo.wallets FROM app_reader;
+
+-- Revoke permissions on dbo.transactions table
+REVOKE SELECT ON dbo.transactions FROM app_reader;
+
+-- Revoke permissions on bet.rounds table
+REVOKE SELECT ON bet.rounds FROM app_reader;
+
+-- Revoke permissions on dbo.Bettrans_SBSW_Bet table
+REVOKE SELECT ON dbo.Bettrans_SBSW_Bet FROM app_reader;
+
+-- Revoke permissions on dbo.Bettrans_SBSW_Settle table
+REVOKE SELECT ON dbo.Bettrans_SBSW_Settle FROM app_reader;
+
+-- Revoke permissions on dbo.Bettrans_SabaPlus_Bet table
+REVOKE SELECT ON dbo.Bettrans_SabaPlus_Bet FROM app_reader;
