@@ -1,7 +1,7 @@
 services:
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.49.1
-    container_name: CAdvisor
+    image: s1hub.nebula.prod/kbt-db/s1-db/cadvisor:v0.49.1
+    container_name: cadvisor-container
     network_mode: host
     pid: host
     privileged: true

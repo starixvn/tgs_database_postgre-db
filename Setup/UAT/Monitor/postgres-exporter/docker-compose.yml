@@ -1,0 +1,11 @@
+services:
+  postgres_exporter:
+    image: s1hub.nebula.prod/kbt-db/s1-db/postgres-exporter:v1.1
+    container_name: postgres-exporter-container
+    user: 302:302
+    network_mode: host
+    restart: always
+    environment:
+      DATA_SOURCE_NAME: "postgres://monitor:G7k9aZ2rP3@10.40.40.162:5434/tsdb?sslmode=disable"
+    ports:
+      - "9187:9187"
