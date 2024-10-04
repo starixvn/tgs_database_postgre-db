@@ -71,17 +71,6 @@ BEGIN
 	--SELECT g.id into _gameid::int  FROM dbo.Games g 
 	--WHERE g.external_id = bet_bettrans_sabaplus_bet.externalgameid 
 	--	AND  g.game_provider_id = bet_bettrans_sabaplus_bet.gameproviderid;
-	
----- check API VoidGame duplicate request duplicate
-	IF EXISTS ( SELECT 1 FROM dbo.bettrans_sabaplus_bet s 
-				WHERE s.ticketNo = bet_bettrans_sabaplus_bet.ticketno 
-				AND s.Action = 'VoidGame'
-			) THEN
-        StatusCode := '101';
-		ErrMsg := 'Duplicate Transaction';
-        
-		RETURN;
-    END IF;
 -------------------------------------------------------
 
 	IF Action = 'Bonus' THEN
@@ -196,74 +185,6 @@ $BODY$;
 		,odds		=> 0.2		
 		
 		,refno		=> null	
-		,statuscode => ''
-		,errmsg 	=> ''
-	)
-
- 
-
-----EndGame
-	CALL dbo.bet_bettrans_sabaplus_bet(
-		seq 			=> 'E6EA2761-46AC-42AF-9DD3-B65E2F763A8E'
-		,operatorcustid =>'4uo0gcqkvze1'
-		,ticketno		=>'12345654406'
-		,Action		=> 'EndGame'
-		,gametype	=>'MaxGame'	
-		,ExternalGameId	=> '5401' 
-		,gameroundid =>'1234567'	
-		,GameProviderCode => 'MAXPLAY'
-		,settledate	=> '2024-09-07 10:02:22+00'	
-		,transactionid  =>'4678gfqf71'
-		,stake		=> 100.0	
-		,netstake	=> 100.0
-		,actualstake => 100.0	
-		,odds		=> 0.2
-		,payout		=> 140.0
-		
-		,refno		=>null	
-		,statuscode => ''
-		,errmsg 	=> ''
-	)
-	select * from dbo.bettrans_Settle   
-	----truncate table  dbo.bettrans_sabaplus_Settle
-	
-----Place bet and Settle /FreeSpin/ Bonus
-	CALL dbo.bet_bettrans_sabaplus_bet_insert(
-		seq => '18A74C4F-C96A-4678-948B-AC3955632E52'
-		,operatorcustid =>'4uo0gcqkvze1'
-		,ticketno	=> '12345654325'	
-		,Action		=> 'PlaceBetAndSettle'
-		,gametype	=>'SlotGame'	
-		,ExternalGameId	=> 1011 	
-		,gameid		=>'200006'	
-		,ipaddress	=>''	
-		,transdate	=> '2024-09-07 10:00:22+00'	
-		,settledate	=> '2024-09-07 10:00:22+00'	
-		,transactionid  =>'4678gfqf71'
-		,stake		=> 100.0	
-		,netstake	=> 100.0
-		,actualstake => 100.0	
-		,odds		=> 0.2
-		,payout		=> 120.0
-		,refno		=>null	
-		,statuscode => ''
-		,errmsg 	=> ''
-	)
-	select * from dbo.bettrans_Bet   
-	----truncate table  dbo.bettrans_sabaplus_Bet RESTART IDENTITY
-	
-----VoidGame
-	CALL dbo.bet_bettrans_sabaplus_bet_insert(
-		seq => 'hj98s34j-h4gh-4jh1-23ee'
-		,operatorcustid =>'4uo0gcqkvze1'
-		,ticketno	=> '12345654324'	
-		,Action		=> 'VoidGame'
-		,gametype	=>'SlotGame'	
-		,gameid		=>'200006'
-		,GameRoundId=>'5402_29835804'
-		,ipaddress	=>''	
-		,transactionid  =>'4678gfqf71'
-		,ProviderTicketStatus = 'Reject'
 		,statuscode => ''
 		,errmsg 	=> ''
 	)

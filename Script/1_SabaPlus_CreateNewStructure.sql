@@ -103,62 +103,13 @@ ALTER SEQUENCE dbo.bettrans_SabaPlus_Bet_sq_seq
     OWNED BY dbo.bettrans_SabaPlus_Bet.sq;
 
 ----------------------------------------------------
---2. TABLE dbo.bettrans_SabaPlus_Settle;
+--2. Add column for  bet.rounds
 ----------------------------------------------------
-	
----drop table if exists dbo.bettrans_SabaPlus_Settle;
-CREATE SEQUENCE IF NOT EXISTS dbo.bettrans_SabaPlus_Settle_sq_seq
-    INCREMENT 1
-    START 1
-    MINVALUE 1
-    MAXVALUE 9223372036854775807
-    CACHE 1;
+ALTER TABLE IF EXISTS bet.rounds
+    ADD COLUMN actual_bet_amount numeric(16, 8) DEFAULT 0;
 
-ALTER SEQUENCE dbo.bettrans_SabaPlus_Settle_sq_seq
-    OWNER TO postgres;
-
-CREATE TABLE dbo.bettrans_SabaPlus_Settle 
-(
-	 SQ				BIGINT					NOT NULL DEFAULT nextval('dbo.bettrans_SabaPlus_Settle_sq_seq'::regclass) 
-	,Seq				character varying(64)	NOT NULL
-	,OperatorCustId	CHARACTER VARYING(32)	NOT NULL			
-	,ExternalGameId	character varying(50)	NULL
-	,GameRoundId	CHARACTER VARYING(100)
-	,GameId			INT						NULL	
-	,GameProviderCode	character varying(16)	NOT NULL
-	,SettleDate		TIMESTAMP WITH TIME ZONE
-	,TicketNo		CHARACTER VARYING(200)		NOT NULL
-	,TransactionId	CHARACTER VARYING(100)	
-	,Stake			DECIMAL(20,6)	 DEFAULT 0.0
-	,ActualStake	DECIMAL(20,6)	DEFAULT 0.0	
-	,NetStake		DECIMAL(20,6)	DEFAULT 0.0
-	,Payout			DECIMAL(20,6)	 DEFAULT 0.0
-	,Odds			DECIMAL(20,2)	NOT NULL	
-	,CurrencyISO	CHARACTER VARYING(10)	
-	,BonusId		CHARACTER VARYING(100)
-	,BonusName		CHARACTER VARYING(500)	
-	,PrizeName		CHARACTER VARYING(500)	
-	,CreateTime		TIMESTAMP WITH TIME ZONE	NOT NULL
-	,UpdateTime		TIMESTAMP WITH TIME ZONE	NOT NULL
-	,Action			CHARACTER VARYING(100)		NOT NULL
-	,TicketStatus	CHARACTER VARYING(100)		NOT NULL
-	,GameResult			character varying(2000)
-	,ResultId			character varying(500)
-);
-
---Primary key
-ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle 
-DROP CONSTRAINT IF EXISTS pk_bettrans_SabaPlus_Settle;
-
-ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle
-    ADD CONSTRAINT pk_bettrans_SabaPlus_Settle PRIMARY KEY (sq);
-
----grant
-ALTER TABLE IF EXISTS dbo.bettrans_SabaPlus_Settle
-    OWNER to postgres;
-
-ALTER SEQUENCE dbo.bettrans_SabaPlus_Settle_sq_seq
-    OWNED BY dbo.bettrans_SabaPlus_Settle.sq;
+ ALTER TABLE IF EXISTS bet.rounds
+    ADD COLUMN adjustment_actual_bet_amount numeric(16, 8) DEFAULT 0;
 
 ----------------------------------------------------
 --3. TABLE dbo.SystemSetting;

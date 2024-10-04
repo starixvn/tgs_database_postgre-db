@@ -7,14 +7,15 @@
 
 CREATE OR REPLACE FUNCTION dbo.bet_bettrans_sabaplus_running_get
 (
-	 Diff integer 
+	 IN diff integer 
+	 ,IN istest bit DEFAULT 0::BIT
 )
 returns table 
 (   
 	ticketno			character varying(200)
 	,gameprovidercode	character varying(16)
 	,externalgameid		character varying(50)
-	,playercode			character varying(16)
+	,playercode			text
 ) 
 LANGUAGE 'plpgsql'
 AS $BODY$
@@ -24,32 +25,26 @@ AS $BODY$
 BEGIN
 	RETURN QUERY
 	 
-	WITH cte_running AS
-	(	SELECT b2.TicketNo
+	 SELECT DISTINCT r.External_round_id AS ticketno
 			,b.gameprovidercode
 			,b.externalgameid
-			,b.playercode
-	FROM dbo.bettrans_sabaplus_bet b
-		JOIN (	SELECT b2.TicketNo , MAX(b2.CreateTime) AS mx_CreateTime 
-				FROM dbo.bettrans_sabaplus_bet b2 
-				GROUP BY b2.TicketNo 
-				) b2
-		ON b.TicketNo = b2.TicketNo		
-		AND b.CreateTime = mx_CreateTime
-	WHERE b.transdate BETWEEN _start AND _end
-		AND b.ticketno NOT LIKE '%simulator_%'
-		AND b.ticketstatus = 'running'
-	)
-
-	SELECT b.ticketno
-			,b.gameprovidercode
-			,b.externalgameid
-			,b.playercode
-	FROM cte_running b;
+			,r.player_code AS playercode
+	FROM bet.rounds r
+		JOIN dbo.bettrans_sabaplus_bet b
+		ON r.external_round_id = b.TicketNo
+		AND r.player_code = b.playercode
+		AND b.ticketstatus = 'running' 
+	WHERE r.external_created_on BETWEEN _start  AND _end
+		AND r.client_status = 1
+		AND ( istest = 0::BIT
+				OR ( istest  = 1::BIT AND LOWER(b.gametype) = 'simulator' AND LOWER(b.ticketno) LIKE '%simulator%' )
+			);
 
 END;
 $BODY$;
 
-ALTER FUNCTION dbo.bet_bettrans_sabaplus_running_get(integer)
- OWNER TO postgres;
-  
+-- select dbo.bet_bettrans_sabaplus_running_get(2, 0::bit )
+
+
+
+
