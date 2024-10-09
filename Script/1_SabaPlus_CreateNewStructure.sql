@@ -111,6 +111,10 @@ ALTER TABLE IF EXISTS bet.rounds
  ALTER TABLE IF EXISTS bet.rounds
     ADD COLUMN adjustment_actual_bet_amount numeric(16, 8) DEFAULT 0;
 
+
+ALTER TABLE IF EXISTS bet.rounds
+    ADD COLUMN external_gameround_id character varying(100) ;
+
 ----------------------------------------------------
 --3. TABLE dbo.SystemSetting;
 ----------------------------------------------------

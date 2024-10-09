@@ -46,6 +46,8 @@ AS $BODY$
 			b_win_loss			numeric(18,6);
 			b_ticketstatus		character varying(100);	
 			b_sq bigint := CAST( COALESCE(refid,'0') AS INT); ---column bettrans_sabaplus_bet.sq
+			b_is_resettle		BIT :=0;			
+			b_external_gameround_id character varying(100);
 
 			r_old_status		smallint;
 			
@@ -56,6 +58,7 @@ AS $BODY$
 			---/end
 
 BEGIN
+		PERFORM pg_advisory_xact_lock(hashtext('bet.bet_rounds_sabaplus_set')::bigint #hashtext(	external_round_id)::bigint);
 
 		---IF not exists (place running bet or place settled bet or missing data): insert
 		-- IF existing: update
@@ -75,6 +78,10 @@ BEGIN
 		IF COALESCE(b_is_existing,0::BIT) = 0::BIT AND (extrastatus LIKE  '%EndGame%' OR extrastatus LIKE '%VoidGame%' OR extrastatus LIKE 'BetResultCheck')  THEN
 			statuscode := '102';
 			errmsg := 'No Data';
+			_end :=   clock_timestamp ;
+			INSERT INTO log.DBA_Log ( uid ,action , object_name	 ,start_time	 ,end_time	 ,text	)	
+			SELECT id, _action, 'bet_rounds_sabaplus_set', _start, _end, errmsg || ',external_round_id =>'	|| COALESCE(CAST( external_round_id	 AS CHARACTER VARYING),'') || ',refid =>'|| COALESCE(refid	,'');
+
 			RETURN;
 		END IF;
 
@@ -82,6 +89,10 @@ BEGIN
 		IF COALESCE(r_old_status,1) > 1 AND bet_rounds_sabaplus_set.actiontype = 'ConfirmBet' THEN
 			statuscode := '104';
 			errmsg := 'Ticket already settle, cannot add bet';
+			_end :=   clock_timestamp ;
+			INSERT INTO log.DBA_Log ( uid ,action , object_name	 ,start_time	 ,end_time	 ,text	)	
+			SELECT id, _action, 'bet_rounds_sabaplus_set',  _start, _end, errmsg || ',external_round_id =>'	|| COALESCE(CAST( external_round_id	 AS CHARACTER VARYING),'') || ',refid =>'|| COALESCE(refid	,'');
+
 			RETURN;
 		END IF;
 
@@ -102,9 +113,13 @@ BEGIN
 						END--b_win_loss
 				,b.ticketstatus
 				,b.actualstake
+				,CASE WHEN b.ExtraInfo LIKE '%{"IsResettle":"True"}%' THEN 1::BIT ELSE 0::BIT END
+				,b.GameRoundId
 			INTO b_stake,  b_bet_type, b_netstake
 					, b_new_client_status, p_new_status
 					, b_win_loss, b_ticketstatus, b_actual_stake
+					, b_is_resettle
+					, b_external_gameround_id
 			FROM dbo.bettrans_sabaplus_bet b
 			WHERE ( b.TicketNo = bet_rounds_sabaplus_set.external_round_id ---ticketNo
 						AND bet_rounds_sabaplus_set.actiontype <> 'ConfirmBet' 
@@ -145,7 +160,8 @@ BEGIN
 				effective_betting_percentage,
 				bet_type,
 				actual_bet_amount,
-				adjustment_actual_bet_amount
+				adjustment_actual_bet_amount,
+				external_gameround_id
 			)
 			SELECT 
 			 	 id,
@@ -158,7 +174,7 @@ BEGIN
 				p_new_status, --status
 				game_provider_configuration_id,	
 				wallet_id,
-				CASE WHEN bet_rounds_sabaplus_set.extrastatus = 'PlaceBet' THEN NULL
+				CASE WHEN bet_rounds_sabaplus_set.actiontype = 'ConfirmBet' THEN NULL
 					ELSE current_timestamp
 					END, --closed_on
 				current_timestamp,	--updated_on
@@ -170,7 +186,7 @@ BEGIN
 				bet_rounds_sabaplus_set.payout, --settle_amount
 				NULL,							--commission
 				CASE WHEN  b_ticketstatus  =  'running'  THEN 0
-					  ELSE b_stake 
+					  ELSE b_netstake
 					  END, --b_turnover,	
 				b_win_loss,		
 				NULL,		--tie_bet_adjustment
@@ -180,13 +196,16 @@ BEGIN
 				NULL,							--effective_betting_percentage		
 				b_bet_type,		
 				b_actual_stake,
-				0;
+				0,
+				b_external_gameround_id;
 		ELSE
 			---RaiseBet, API EndGame/VoidGame/BetResultCheck
 			UPDATE bet.rounds br
 					SET status				= p_new_status
 						,closed_on			= CASE WHEN COALESCE(b_is_raise_bet,0::BIT) = 1::BIT  --raise bet
-														OR ( b_ticketstatus  IN ('void', 'refund','reject') AND br.status = 2 ) THEN br.closed_on -- void/refund/reject ticket settle
+														OR ( b_ticketstatus  IN ('void', 'refund','reject') AND br.status = 2 ) 
+														OR b_is_resettle = 1::BIT
+														THEN br.closed_on -- void/refund/reject ticket settle
 													ELSE current_timestamp
 													END
 						,updated_on			= current_timestamp
@@ -217,9 +236,7 @@ BEGIN
 													ELSE b_netstake
 													END
 						,turnover			= CASE WHEN b_ticketstatus IN ('void','reject','refund','running' ) THEN 0 
-													WHEN b_ticketstatus  IN ('won','lose','draw') THEN CASE WHEN b_netstake > 0 THEN b_netstake 
-																																ELSE bet_amount
-																																END
+													WHEN b_ticketstatus  IN ('won','lose','draw') THEN b_netstake
 													ELSE NULL ---bug
 													END
 					WHERE br.external_round_id = bet_rounds_sabaplus_set.external_round_id 
@@ -228,28 +245,29 @@ BEGIN
 		END IF;
 
 		---for keep track in local
-			_end := current_timestamp;
+			_end := CAST( clock_timestamp() as timestamp);
 			IF COALESCE(b_is_existing,0::BIT) = 0::BIT THEN  _action := 'insert' ;
 				ELSE  _action := 'update';
 			END IF;
 			
 			INSERT INTO log.DBA_Log ( uid ,action , object_name	 ,start_time	 ,end_time	 ,text	)	
 			SELECT id, _action, 'bet_rounds_sabaplus_set',  _start, _end
-					, 'external_round_id =>'					|| CAST( external_round_id				AS CHARACTER VARYING)
-						|| ',game_provider_id=>'				|| CAST( game_provider_id				AS CHARACTER VARYING)
-						|| ',player_code =>'					|| CAST( player_code					AS CHARACTER VARYING)
-						|| ',game_id =>'						|| CAST( game_id						AS CHARACTER VARYING)
-						|| ',currency_code =>'					|| CAST( currency_code					AS CHARACTER VARYING)
-						|| ',status  =>' 						|| CAST( status							AS CHARACTER VARYING)
-						|| ',game_provider_configuration_id =>'	|| CAST( game_provider_configuration_id	AS CHARACTER VARYING)
-						|| ',licenseetxid =>'					|| CAST( licenseetxid					AS CHARACTER VARYING)
-						|| ',wallet_id =>'						|| CAST( wallet_id						AS CHARACTER VARYING)
-						|| ',brand_id =>'						|| CAST( brand_id						AS CHARACTER VARYING)
-						|| ',external_created_on =>' 			|| CAST( external_created_on			AS CHARACTER VARYING)
-						|| ',external_closed_on =>'				|| CAST( external_closed_on				AS CHARACTER VARYING)
-						|| ',payout =>'							|| CAST( payout							AS CHARACTER VARYING)
-						|| ',extrastatus =>' 					|| CAST( extrastatus					AS CHARACTER VARYING)
-						|| ',actiontype =>'						|| CAST( actiontype						AS CHARACTER VARYING)
+					, 'external_round_id =>'					|| COALESCE(CAST( external_round_id				 AS CHARACTER VARYING),'')
+						|| ',game_provider_id=>'				|| COALESCE(CAST( game_provider_id				 AS CHARACTER VARYING),'')
+						|| ',player_code =>'					|| COALESCE(CAST( player_code					 AS CHARACTER VARYING),'')
+						|| ',game_id =>'						|| COALESCE(CAST( game_id						 AS CHARACTER VARYING),'')
+						|| ',currency_code =>'					|| COALESCE(CAST( currency_code					 AS CHARACTER VARYING),'')
+						|| ',status  =>' 						|| COALESCE(CAST( status						 AS CHARACTER VARYING),'')
+						|| ',game_provider_configuration_id =>'	|| COALESCE(CAST( game_provider_configuration_id AS CHARACTER VARYING),'')
+						|| ',licenseetxid =>'					|| COALESCE(CAST( licenseetxid					 AS CHARACTER VARYING),'')
+						|| ',wallet_id =>'						|| COALESCE(CAST( wallet_id						 AS CHARACTER VARYING),'')
+						|| ',brand_id =>'						|| COALESCE(CAST( brand_id						 AS CHARACTER VARYING),'')
+						|| ',external_created_on =>' 			|| COALESCE(CAST( external_created_on			 AS CHARACTER VARYING),'')
+						|| ',external_closed_on =>'				|| COALESCE(CAST( external_closed_on			 AS CHARACTER VARYING),'')
+						|| ',payout =>'							|| COALESCE(CAST( payout						 AS CHARACTER VARYING),'')
+						|| ',extrastatus =>' 					|| COALESCE(CAST( extrastatus					 AS CHARACTER VARYING),'')
+						|| ',actiontype =>'						|| COALESCE(CAST( actiontype					 AS CHARACTER VARYING),'')
+						|| ',refid =>'							|| COALESCE(refid		,'')						
 					;
 					
 		---/end

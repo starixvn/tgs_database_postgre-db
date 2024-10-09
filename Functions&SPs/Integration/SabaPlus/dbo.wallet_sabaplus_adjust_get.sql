@@ -12,6 +12,7 @@ CREATE OR REPLACE PROCEDURE dbo.wallet_sabaplus_adjust_get
 	 ,IN gametype		character varying DEFAULT NULL::character varying
 	 ,IN actualstake	numeric DEFAULT 0.0
 	 ,IN payout			numeric DEFAULT 0.0
+	 ,refno				bigint	DEFAULT 0::bigint ---dbo.bettrans_sabaplus_bet.sq
 
 	 ,INOUT balanceadjust numeric DEFAULT 0
 	 ,INOUT statuscode		character varying DEFAULT '0'::character varying
@@ -29,7 +30,6 @@ AS $BODY$
 			_old_payout			numeric(20,6);
 			_old_status			character varying(10);
 			_adjust				numeric(18,6);
-			_cnt				int;
 
 BEGIN
 	---need to add case send running
@@ -53,24 +53,8 @@ BEGIN
 											 END 
 									, CASE WHEN b.ticketstatus in ('won','lose','draw') then sq else 0 END desc ) as rn
 		FROM dbo.bettrans_sabaplus_bet b
-		WHERE b.ticketno = wallet_sabaplus_adjust_get.ticketno;
-
-	IF ( SELECT COUNT(*) FROM ticketinfo ) = 0 THEN
-		StatusCode := '102';
-		ErrMsg := 'No Data';
-        
-		RETURN;
-    END IF;
-
-	SELECT COUNT(*) FROM ( SELECT DISTINCT t.operatorcustid, t.gametype FROM ticketinfo t UNION SELECT wallet_sabaplus_adjust_get.operatorcustid, wallet_sabaplus_adjust_get.gametype ) INTO _cnt;
-	
-	IF _cnt > 1  THEN	
-		StatusCode := '103';
-		ErrMsg := 'Wrong Player or GameType';
-        
-		RETURN;
-    END IF;
-
+		WHERE b.ticketno = wallet_sabaplus_adjust_get.ticketno
+			AND b.sq <> wallet_sabaplus_adjust_get.refno;
 
 	SELECT SUM(b.actualstake)	 
 			, SUM(b.payout)		 
@@ -92,6 +76,16 @@ BEGIN
 	END IF;
 
 	DROP TABLE ticketinfo; 
+
+	EXCEPTION 
+		WHEN unique_violation THEN 
+			SELECT  'duplicate ticket' INTO errmsg;
+			SELECT '101' INTO statuscode;
+		WHEN Others THEN
+			 get stacked diagnostics
+        		statuscode   = returned_sqlstate,
+        		errmsg     = message_text;
+
 END;
 $BODY$;
 
@@ -104,6 +98,7 @@ call   dbo.wallet_sabaplus_adjust_get
 	  , actualstake		 => 2.0
 	  , payout			 => 26.0
 	  , operatorcustid		 => '4uo2mwf6dow8_test'
+	  ,refno	=> 19923
 )
 
  
@@ -114,5 +109,6 @@ call   dbo.wallet_sabaplus_adjust_get
 	  , actualstake		 => 2.0
 	  , payout			 => 26.0
 	  , operatorcustid		 => '4uo2mwf6dow8_test'
+	  ,refno	=> 19923
 )
 */

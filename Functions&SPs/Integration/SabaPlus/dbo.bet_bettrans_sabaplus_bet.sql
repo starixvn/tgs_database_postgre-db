@@ -51,9 +51,43 @@ LANGUAGE 'plpgsql'
 */
 AS $BODY$
 	DECLARE TicketStatus 	character varying(100) := 'running';
-			--_gameid	int;
 			
 BEGIN
+	
+	IF Action = 'PlaceBet' THEN
+		PERFORM pg_advisory_xact_lock_shared (hashtext('dbo.bet_bettrans_sabaplus_bet')::bigint  #hashtext(ticketno)::bigint);
+	ELSEIF Action IN ('EndGame', 'VoidGame', 'BetResultCheck') THEN
+		PERFORM pg_advisory_xact_lock		 (hashtext('dbo.bet_bettrans_sabaplus_bet')::bigint #hashtext(ticketno)::bigint);
+	END IF;
+
+	---Validation: not allow add bet after settle, cash service should refund stake if already deducted
+	IF Action = 'PlaceBet' AND EXISTS (	SELECT 1 FROM  dbo.bettrans_sabaplus_bet b
+										WHERE b.ticketno = bet_bettrans_sabaplus_bet.ticketno AND b.Action IN (  'EndGame', 'VoidGame', 'BetResultCheck')
+										) THEN
+			statuscode := '104';
+			errmsg := 'Ticket already settle, cannot add bet';
+			RETURN;
+	END IF;
+	
+	IF Action IN( 'EndGame', 'VoidGame', 'BetResultCheck') THEN
+		IF NOT EXISTS (	SELECT 1 FROM  dbo.bettrans_sabaplus_bet b	WHERE b.ticketno = bet_bettrans_sabaplus_bet.ticketno) THEN
+			StatusCode := '102';
+			ErrMsg := 'No Data';       
+			RETURN;
+		END IF;
+
+		IF (	SELECT COUNT(*) FROM (	SELECT DISTINCT b.operatorcustid, b.gametype 
+										FROM dbo.bettrans_sabaplus_bet b 
+										WHERE b.TicketNo = bet_bettrans_sabaplus_bet.ticketno
+										UNION 
+										SELECT bet_bettrans_sabaplus_bet.operatorcustid, bet_bettrans_sabaplus_bet.gametype 
+									))::int > 1 THEN
+			StatusCode := '103';
+			ErrMsg := 'Wrong Player or GameType';      
+			RETURN;
+		END IF;
+
+    END IF;
 
 ---- get TicketStatus from API
 	IF Action IN ( 'VoidGame', 'BetResultCheck') THEN
@@ -67,11 +101,6 @@ BEGIN
 				END
 		INTO TicketStatus;
 	END IF;
-
-	--SELECT g.id into _gameid::int  FROM dbo.Games g 
-	--WHERE g.external_id = bet_bettrans_sabaplus_bet.externalgameid 
-	--	AND  g.game_provider_id = bet_bettrans_sabaplus_bet.gameproviderid;
--------------------------------------------------------
 
 	IF Action = 'Bonus' THEN
 		SELECT 'won' INTO TicketStatus;
@@ -87,6 +116,7 @@ BEGIN
 				END INTO TicketStatus;
 	END IF;
 
+-------------------------------------------------------
 	INSERT INTO dbo.bettrans_sabaplus_bet 
 	(	OperatorCustId	
 		,GameType		
