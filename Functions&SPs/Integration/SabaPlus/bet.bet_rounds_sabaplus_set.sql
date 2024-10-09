@@ -78,7 +78,7 @@ BEGIN
 		IF COALESCE(b_is_existing,0::BIT) = 0::BIT AND (extrastatus LIKE  '%EndGame%' OR extrastatus LIKE '%VoidGame%' OR extrastatus LIKE 'BetResultCheck')  THEN
 			statuscode := '102';
 			errmsg := 'No Data';
-			_end :=   clock_timestamp ;
+			_end :=   clock_timestamp() ;
 			INSERT INTO log.DBA_Log ( uid ,action , object_name	 ,start_time	 ,end_time	 ,text	)	
 			SELECT id, _action, 'bet_rounds_sabaplus_set', _start, _end, errmsg || ',external_round_id =>'	|| COALESCE(CAST( external_round_id	 AS CHARACTER VARYING),'') || ',refid =>'|| COALESCE(refid	,'');
 
@@ -89,7 +89,7 @@ BEGIN
 		IF COALESCE(r_old_status,1) > 1 AND bet_rounds_sabaplus_set.actiontype = 'ConfirmBet' THEN
 			statuscode := '104';
 			errmsg := 'Ticket already settle, cannot add bet';
-			_end :=   clock_timestamp ;
+			_end :=   clock_timestamp() ;
 			INSERT INTO log.DBA_Log ( uid ,action , object_name	 ,start_time	 ,end_time	 ,text	)	
 			SELECT id, _action, 'bet_rounds_sabaplus_set',  _start, _end, errmsg || ',external_round_id =>'	|| COALESCE(CAST( external_round_id	 AS CHARACTER VARYING),'') || ',refid =>'|| COALESCE(refid	,'');
 
